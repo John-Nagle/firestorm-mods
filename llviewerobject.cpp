@@ -2569,7 +2569,7 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 		// Calculate predicted position and velocity
 		LLVector3 new_pos = (vel + (0.5f * (dt-PHYSICS_TIMESTEP)) * accel) * dt;	
 		LLVector3 new_v = accel * dt;
-
+				
 		if (time_since_last_update > sPhaseOutUpdateInterpolationTime &&
 			sPhaseOutUpdateInterpolationTime > (F64Seconds)0.0)
 		{	// Haven't seen a viewer update in a while, check to see if the circuit is still active
@@ -2652,6 +2652,24 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 		{	// Going off this region, so see if we might end up on another region
 			LLVector3d old_pos_global = mRegionp->getPosGlobalFromRegion(getPositionRegion());
 			new_pos_global = mRegionp->getPosGlobalFromRegion(new_pos);		// Re-fetch in case it got clipped above
+			//  ***NEW***
+		    //  Clip new_pos to current region. Moves across region boundaries should not be extrapolated.
+		    //  Extrapolation across region boundaries is almost always wrong, and if the region being
+		    //  entered is slow to respond, very wrong.
+		    bool clipped;   // true if clipped at boundary
+			LLVector3d clip_pos_global_region = LLWorld::getInstance()->clipToRegion(mRegionp,old_pos_global, new_pos_global, clipped);
+			if (clipped)
+			{   //  Was clipped, so we crossed a region boundary
+				LL_INFOS() << "Hit region edge, clipped predicted position to " << mRegionp->getPosRegionFromGlobal(clip_pos_global_region)
+				    << " from " << new_pos << LL_ENDL;
+				new_pos = mRegionp->getPosRegionFromGlobal(clip_pos_global_region);				
+				// Stop motion and get server update for bouncing on the edge
+				new_v.clear();
+				setAcceleration(LLVector3::zero);
+            }
+            //  Probably don't need edge of world check below any more since we are clipping the predictor to the region.
+    		//  ***END NEW***
+
 
 			// Clip the positions to known regions
 			LLVector3d clip_pos_global = LLWorld::getInstance()->clipToVisibleRegions(old_pos_global, new_pos_global);

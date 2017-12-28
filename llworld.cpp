@@ -764,7 +764,77 @@ LLViewerRegion* LLWorld::getRegionFromPosGlobal(const LLVector3d &pos)
 	}
 	return NULL;
 }
+//// ****DETECTS FALSE CLIP FOR ELEVATIONS ABOVE 256m. WHY? MAX ELEV. IS 4096. ***
+LLVector3d	LLWorld::clipToRegion(const LLViewerRegion* regionp, const LLVector3d &start_pos, const LLVector3d &end_pos, bool &clipped)
+{   clipped = false;                                    // no clipping yet
+	if (!regionp)                                       // no region. We're lost.
+	{   clipped = true;                                 // very bad
+		return start_pos;
+	}
 
+	LLVector3d delta_pos = end_pos - start_pos;
+	LLVector3d delta_pos_abs;
+	delta_pos_abs.setVec(delta_pos);
+	delta_pos_abs.abs();
+
+	LLVector3 region_coord = regionp->getPosRegionFromGlobal(end_pos);
+	F64 clip_factor = 0.0;                              // zero means no clip   
+	F32 region_width = regionp->getWidth();
+	if (region_coord.mV[VX] < 0.f)
+	{
+		if (region_coord.mV[VY] < region_coord.mV[VX])
+		{
+			// clip along y -
+			clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
+		}
+		else
+		{
+			// clip along x -
+			clip_factor = -(region_coord.mV[VX] / delta_pos_abs.mdV[VX]);
+		}
+	}
+	else if (region_coord.mV[VX] > region_width)
+	{
+		if (region_coord.mV[VY] > region_coord.mV[VX])
+		{
+			// clip along y +
+			clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
+		}
+		else
+		{
+			//clip along x +
+			clip_factor = (region_coord.mV[VX] - region_width) / delta_pos_abs.mdV[VX];
+		}
+	}
+	else if (region_coord.mV[VY] < 0.f)
+	{
+		// clip along y -
+		clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
+	}
+	else if (region_coord.mV[VY] > region_width)
+	{ 
+		// clip along y +
+		clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
+	}
+	if (!std::isfinite(clip_factor)) { clip_factor = 0.0; } // avoid NaN problems
+	clip_factor = llclamp(clip_factor, 0.0, 1.0);           // avoid overflow problems
+
+    //  True if clipped. Caller needs to know, because it will kill velocity if there's clipping.
+    //  Don't do this by comparing floating point numbers for equality. That has roundoff problems.
+	clipped = clip_factor > F_ALMOST_ZERO;                       // clipped in X or Y
+	LLVector3d final_region_pos = LLVector3d(region_coord) - (delta_pos * clip_factor);
+	clipped |= final_region_pos.mdV[VX] < 0.0 || final_region_pos.mdV[VX] > (F64)(region_width - F_ALMOST_ZERO);
+	clipped |= final_region_pos.mdV[VY] < 0.0 || final_region_pos.mdV[VY] > (F64)(region_width - F_ALMOST_ZERO);
+	clipped |= final_region_pos.mdV[VZ] < 0.0 || final_region_pos.mdV[VZ] > (F64)(LLWorld::getInstance()->getRegionMaxHeight() - F_ALMOST_ZERO);              // if actually clipping
+                                              // apply bounds if necessary
+	final_region_pos.mdV[VX] = llclamp(final_region_pos.mdV[VX], 0.0,
+									   (F64)(region_width - F_ALMOST_ZERO));
+	final_region_pos.mdV[VY] = llclamp(final_region_pos.mdV[VY], 0.0,
+									   (F64)(region_width - F_ALMOST_ZERO));
+	final_region_pos.mdV[VZ] = llclamp(final_region_pos.mdV[VZ], 0.0,
+									   (F64)(LLWorld::getInstance()->getRegionMaxHeight() - F_ALMOST_ZERO));									  
+	return regionp->getPosGlobalFromRegion(LLVector3(final_region_pos));
+}
 
 LLVector3d	LLWorld::clipToVisibleRegions(const LLVector3d &start_pos, const LLVector3d &end_pos)
 {
@@ -774,6 +844,9 @@ LLVector3d	LLWorld::clipToVisibleRegions(const LLVector3d &start_pos, const LLVe
 	}
 
 	LLViewerRegion* regionp = getRegionFromPosGlobal(start_pos);
+	bool clipped;                                                   // sink, unused
+	return clipToRegion(regionp, start_pos, end_pos, clipped);      // use common fn for clipping to region
+	//  ***UNREACHABLE--REMOVE***
 	if (!regionp) 
 	{
 		return start_pos;
