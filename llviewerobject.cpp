@@ -2652,7 +2652,6 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 		{	// Going off this region, so see if we might end up on another region
 			LLVector3d old_pos_global = mRegionp->getPosGlobalFromRegion(getPositionRegion());
 			new_pos_global = mRegionp->getPosGlobalFromRegion(new_pos);		// Re-fetch in case it got clipped above
-			//  ***NEW***
 		    //  Clip new_pos to current region. Moves across region boundaries should not be extrapolated.
 		    //  Extrapolation across region boundaries is almost always wrong, and if the region being
 		    //  entered is slow to respond, very wrong.
@@ -2665,11 +2664,13 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 				new_pos = mRegionp->getPosRegionFromGlobal(clip_pos_global_region);				
 				// Stop motion and get server update for bouncing on the edge
 				new_v.clear();
-				setAcceleration(LLVector3::zero);
+				setAcceleration(LLVector3::zero);       // stop linear acceleration
+				LLVector3 new_angv;
+				new_angv.clear();
+				setAngularVelocity(new_angv);           // stop rotation
+
             }
             //  Probably don't need edge of world check below any more since we are clipping the predictor to the region.
-    		//  ***END NEW***
-
 
 			// Clip the positions to known regions
 			LLVector3d clip_pos_global = LLWorld::getInstance()->clipToVisibleRegions(old_pos_global, new_pos_global);
