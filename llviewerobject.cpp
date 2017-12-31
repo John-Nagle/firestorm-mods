@@ -2660,7 +2660,7 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 			if (clipped)
 			{   //  Was clipped, so we crossed a region boundary
 				LL_INFOS() << "Hit region edge, clipped predicted position to " << mRegionp->getPosRegionFromGlobal(clip_pos_global_region)
-				    << " from " << new_pos << LL_ENDL;
+				    << " from [" << getPositionRegion() << " .. " << new_pos << "]" << LL_ENDL;
 				new_pos = mRegionp->getPosRegionFromGlobal(clip_pos_global_region);				
 				// Stop motion and get server update for bouncing on the edge
 				new_v.clear();
