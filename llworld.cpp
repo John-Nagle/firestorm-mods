@@ -764,10 +764,8 @@ LLViewerRegion* LLWorld::getRegionFromPosGlobal(const LLVector3d &pos)
 	}
 	return NULL;
 }
-//  clipToRegion
-//
-//  Clip a position to the point on the line segment between start_pos and end_pos closest to end_pos
-//  but within the region. If start_pos is outside the region, use start_pos.
+//  Clip to region, using a point along the line start_pos .. end_pos.
+//  If start_pos is outside the region, use start_pos.
 LLVector3d	LLWorld::clipToRegion(const LLViewerRegion* regionp, const LLVector3d &start_pos, const LLVector3d &end_pos, bool &clipped)
 {   clipped = false;                                    // no clipping yet
 	if (!regionp)                                       // no region. We're lost.
@@ -781,87 +779,53 @@ LLVector3d	LLWorld::clipToRegion(const LLViewerRegion* regionp, const LLVector3d
 	delta_pos_abs.abs();
 
 	LLVector3 region_coord = regionp->getPosRegionFromGlobal(end_pos);
+	LLVector3 region_coord_start = regionp->getPosRegionFromGlobal(start_pos);
 	F64 clip_factor = 0.0;                              // zero means no clip   
 	F32 region_width = regionp->getWidth();
-	//  Compute clip factor.
-	if (region_coord.mV[VX] < 0.f)
+	if (region_coord_start.mV[VX] < 0.f || region_coord_start.mV[VX] > region_width 
+	|| region_coord_start.mV[VY] < 0.f || region_coord_start.mV[VY] > region_width)
+	{   clip_factor = 1.0;  }                           // start pos outside region, use start pos
+	else                                                // clip to region along line from start pos to end pos
 	{
-		if (region_coord.mV[VY] < region_coord.mV[VX])
-		{
-			// clip along y -
-			clip_factor = -(region_coord.mV[VY] / delta_pos.mdV[VY]);
-		}
-		else
-		{
-			// clip along x -
-			clip_factor = -(region_coord.mV[VX] / delta_pos_mdV[VX]);
-		}
-	}
-	else if (region_coord.mV[VX] > region_width)
-	{
-		if (region_coord.mV[VY] > region_coord.mV[VX])
-		{
-			// clip along y +
-			clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
-		}
-		else
-		{
-			//clip along x +
-			clip_factor = (region_coord.mV[VX] - region_width) / delta_pos_abs.mdV[VX];
-		}
-	}
-	else if (region_coord.mV[VY] < 0.f)
-	{
-		// clip along y -
-		clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
-	}
-	else if (region_coord.mV[VY] > region_width)
-	{ 
-		// clip along y +
-		clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
-	}
-
-#ifdef OBSOLETE
-	if (region_coord.mV[VX] < 0.f)
-	{
-		if (region_coord.mV[VY] < region_coord.mV[VX])
-		{
-			// clip along y -
-			clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
-		}
-		else
-		{
-			// clip along x -
+	    if (region_coord.mV[VX] < 0.f)
+	    {
+		    if (region_coord.mV[VY] < region_coord.mV[VX])
+		    {
+			    // clip along y -
+			    clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
+		    }
+		    else
+		    {
+			    // clip along x -
 			clip_factor = -(region_coord.mV[VX] / delta_pos_abs.mdV[VX]);
-		}
-	}
-	else if (region_coord.mV[VX] > region_width)
-	{
-		if (region_coord.mV[VY] > region_coord.mV[VX])
-		{
-			// clip along y +
-			clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
-		}
-		else
-		{
-			//clip along x +
-			clip_factor = (region_coord.mV[VX] - region_width) / delta_pos_abs.mdV[VX];
-		}
-	}
-	else if (region_coord.mV[VY] < 0.f)
-	{
-		// clip along y -
-		clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
-	}
-	else if (region_coord.mV[VY] > region_width)
-	{ 
-		// clip along y +
+		    }
+	    }
+	    else if (region_coord.mV[VX] > region_width)
+	    {
+		    if (region_coord.mV[VY] > region_coord.mV[VX])
+		    {
+			    // clip along y +
+			    clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
+		    }
+		    else
+		    {
+			    //clip along x +
+			    clip_factor = (region_coord.mV[VX] - region_width) / delta_pos_abs.mdV[VX];
+		    }
+	    }
+	    else if (region_coord.mV[VY] < 0.f)
+	    {
+		    // clip along y -
+		    clip_factor = -(region_coord.mV[VY] / delta_pos_abs.mdV[VY]);
+	    }
+	    else if (region_coord.mV[VY] > region_width)
+	    { 
+		    // clip along y +
 		clip_factor = (region_coord.mV[VY] - region_width) / delta_pos_abs.mdV[VY];
-	}
-#endif // OBSOLETE
-	if (!std::isfinite(clip_factor)) { clip_factor = 0.0; } // avoid NaN problems. 
-	clip_factor = llclamp(clip_factor, 0.0, 1.0);           // avoid overflow problems
-
+	    }
+	    if (!std::isfinite(clip_factor)) { clip_factor = 0.0; } // avoid NaN problems
+	    clip_factor = llclamp(clip_factor, 0.0, 1.0);           // avoid overflow problems
+    }
     //  True if clipped. Caller needs to know, because it will kill velocity if there's clipping.
     //  Don't do this by comparing floating point numbers for equality. That has roundoff problems.
 	clipped = clip_factor > F_ALMOST_ZERO;                       // clipped in X or Y
@@ -870,11 +834,11 @@ LLVector3d	LLWorld::clipToRegion(const LLViewerRegion* regionp, const LLVector3d
 	clipped |= final_region_pos.mdV[VY] < -F_ALMOST_ZERO || final_region_pos.mdV[VY] > (F64)(region_width - F_ALMOST_ZERO);
 	clipped |= final_region_pos.mdV[VZ] < -F_ALMOST_ZERO || final_region_pos.mdV[VZ] > (F64)(LLWorld::getInstance()->getRegionMaxHeight() - F_ALMOST_ZERO);              // if actually clipping
                                               // apply bounds if necessary
+    ////  Don't hard clip to region.                                        
 	////final_region_pos.mdV[VX] = llclamp(final_region_pos.mdV[VX], 0.0,
 	////								   (F64)(region_width - F_ALMOST_ZERO));
 	////final_region_pos.mdV[VY] = llclamp(final_region_pos.mdV[VY], 0.0,
 	////								   (F64)(region_width - F_ALMOST_ZERO));
-	//  Clip Z bounds
 	final_region_pos.mdV[VZ] = llclamp(final_region_pos.mdV[VZ], 0.0,
 									   (F64)(LLWorld::getInstance()->getRegionMaxHeight() - F_ALMOST_ZERO));									  
 	return regionp->getPosGlobalFromRegion(LLVector3(final_region_pos));
