@@ -2659,12 +2659,12 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 			LLVector3d clip_pos_global_region = LLWorld::getInstance()->clipToRegion(mRegionp,old_pos_global, new_pos_global, clipped);
 			if (clipped)
 			{   //  Was clipped, so we crossed a region boundary
-				LL_INFOS() << "Hit region edge, clipped predicted position to " << mRegionp->getPosRegionFromGlobal(clip_pos_global_region)
+				LL_INFOS() << "Beyond region edge, clipped predicted position to " << mRegionp->getPosRegionFromGlobal(clip_pos_global_region)
 				    << " from [" << getPositionRegion() << " .. " << new_pos << "]" << LL_ENDL;
 				new_pos = mRegionp->getPosRegionFromGlobal(clip_pos_global_region);				
-				// Stop motion and get server update for bouncing on the edge
-				new_v.clear();
-				setAcceleration(LLVector3::zero);       // stop linear acceleration
+				//// Don't zero out velocity on the server. Telling the server affects scripts and audio.
+				////new_v.clear();
+				////setAcceleration(LLVector3::zero);       // stop linear acceleration
 				LLVector3 new_angv;
 				new_angv.clear();
 				setAngularVelocity(new_angv);           // stop rotation
@@ -2677,8 +2677,8 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& time, con
 			if (clip_pos_global != new_pos_global)
 			{	// Was clipped, so this means we hit a edge where there is no region to enter
 				
-				//LL_INFOS() << "Hit empty region edge, clipped predicted position to " << mRegionp->getPosRegionFromGlobal(clip_pos_global)
-				//	<< " from " << new_pos << LL_ENDL;
+				LL_INFOS() << "Hit empty region edge, clipped predicted position to " << mRegionp->getPosRegionFromGlobal(clip_pos_global)
+					<< " from " << new_pos << LL_ENDL;
 				new_pos = mRegionp->getPosRegionFromGlobal(clip_pos_global);
 				
 				// Stop motion and get server update for bouncing on the edge

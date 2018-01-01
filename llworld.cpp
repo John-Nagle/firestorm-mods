@@ -833,12 +833,12 @@ LLVector3d	LLWorld::clipToRegion(const LLViewerRegion* regionp, const LLVector3d
 	clipped |= final_region_pos.mdV[VX] < -F_ALMOST_ZERO || final_region_pos.mdV[VX] > (F64)(region_width - F_ALMOST_ZERO);
 	clipped |= final_region_pos.mdV[VY] < -F_ALMOST_ZERO || final_region_pos.mdV[VY] > (F64)(region_width - F_ALMOST_ZERO);
 	clipped |= final_region_pos.mdV[VZ] < -F_ALMOST_ZERO || final_region_pos.mdV[VZ] > (F64)(LLWorld::getInstance()->getRegionMaxHeight() - F_ALMOST_ZERO);              // if actually clipping
-                                              // apply bounds if necessary
-    ////  Don't hard clip to region.                                        
-	////final_region_pos.mdV[VX] = llclamp(final_region_pos.mdV[VX], 0.0,
-	////								   (F64)(region_width - F_ALMOST_ZERO));
-	////final_region_pos.mdV[VY] = llclamp(final_region_pos.mdV[VY], 0.0,
-	////								   (F64)(region_width - F_ALMOST_ZERO));
+    //  Final sanity check - don't allow positions more than clamp_range out of region. 
+    F64 clamp_range = region_width / 2.0;       // half a region width                               
+	final_region_pos.mdV[VX] = llclamp(final_region_pos.mdV[VX], -clamp_range,
+									   (F64)(region_width + clamp_range));
+	final_region_pos.mdV[VY] = llclamp(final_region_pos.mdV[VY], -clamp_range,
+									   (F64)(region_width + clamp_range));
 	final_region_pos.mdV[VZ] = llclamp(final_region_pos.mdV[VZ], 0.0,
 									   (F64)(LLWorld::getInstance()->getRegionMaxHeight() - F_ALMOST_ZERO));									  
 	return regionp->getPosGlobalFromRegion(LLVector3(final_region_pos));
