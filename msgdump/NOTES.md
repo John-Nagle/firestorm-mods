@@ -30,6 +30,33 @@ At line 1553, fan out on message length for ImprovedTerseObjectUpdate.
     
 This format is simpler than it looks.See "fsmsgdump.h" for what it really is.
 
+### llvocavatarself.cpp
+
+Avatar region crossings happen at 
+
+LLVOAvatarSelf::updateRegion
+
+which ought to unconditionally put in the log
+
+    LL_INFOS() << "Region crossing took " << (F32)(delta * 1000.0).value() << " ms " << LL_ENDL;
+    
+but, in fact, that message appears only for some region crossings. Do not know why yet.
+
+In the "all region crossings take 10s" state, the messages show numbers like 10000 ms.
+
+### llcircuit.cpp
+
+LLCircuitData::checkPacketInID
+
+The message
+
+    2018-09-12T05:00:53Z INFO: llmessage/llcircuit.cpp(767) : checkPacketInID: packet_out_of_order - got packet 2 expecting 3701 from 216.82.56.75:13001
+    2018-09-12T05:00:53Z INFO: llmessage/llcircuit.cpp(768) : checkPacketInID: 0 since last log entry
+    
+appears in some runs with region crossing failures. But it also appears in ones with no region crossing failures. It even appears in ones where no vehicle is used.
+It's always "got packet 2". And there are no "packet gap" error messages. Is something wrong there?
+
+
 #### Trouble spots
     
 Potential buffer overflow in llviewerobject.cpp at lines 1235 and 1549:
@@ -46,6 +73,8 @@ object.
 
 The code around region change recognition, at the beginning of object update, is suspicious.
 Need to dump info from there. 
+
+
     
 
 

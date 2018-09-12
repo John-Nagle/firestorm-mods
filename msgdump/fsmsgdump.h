@@ -10,7 +10,23 @@
 //
 //  Net-order types
 //
-typedef uint16_t U16Net;                //
+//  ***TEMP***
+typedef uint16_t U16;                   // SL
+typedef uint32_t U32;                   // SL
+//  ***END TEMP***
+
+//  Unsigned integer, 16 bits, net byte order, as in packets.               
+struct U16Net {
+    uint8_t bytes[2];
+    U16 ntoh() const { return((bytes[0]<<8) | bytes[1]); }  // convert from network to host order
+};
+
+//  Unsigned integer, 32 bits, net byte order, as in packets               
+struct U32Net {
+    uint8_t bytes[4];
+    U32 ntoh() const { return((bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3]); }  // convert from network to host order
+};
+    
 typedef uint32_t LLVector3Net[3];       // an LLVector3 in net order
 typedef uint32_t LLVector4Net[4];
 //
@@ -83,7 +99,7 @@ union ObjectUpdateData {
     static_assert(sizeof(ObjectUpdateData32) == 32, "ObjectUpdateData32 struct is wrong size");   // must be exactly this size
     static_assert(sizeof(ObjectUpdateData48) == 48, "ObjectUpdateData48 struct is wrong size");   // must be exactly this size
     static_assert(sizeof(ObjectUpdateData60) == 60, "ObjectUpdateData60 struct is wrong size");   // must be exactly this size    
-    static_assert(sizeof(ObjectUpdateData76) == 76, "ObjectUpdateData60 struct is wrong size");   // must be exactly this size
+    static_assert(sizeof(ObjectUpdateData76) == 76, "ObjectUpdateData76 struct is wrong size");   // must be exactly this size
 
 
 };
