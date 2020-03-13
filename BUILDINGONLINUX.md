@@ -43,7 +43,7 @@ some antique GCC compiler any more.  Just install
    
 Surprisingly, that's all that was needed. It's possible that something
 else may be needed on some other system, but if something is missing,
-the build wil fail and it should be obvious what needs to be installed.
+the build will fail and it should be obvious what needs to be installed.
 
 ## Configuring
 
@@ -57,13 +57,15 @@ If it's so slow you think it has failed, you can kill it and run it as
 
     ../autobuild-1.1/bin/autobuild configure --debug -A64 -c ReleaseFS_open 
     
-which will produce progress messages for all the file downloads.
+which will produce progress messages for all the file downloads. 
 
 ## Compiling
 
      nice ../autobuild-1.1/bin/autobuild build -A64 -c ReleaseFS_open
      
-This takes 1-2 hours and uses all available CPUs. 
+This takes 1-2 hours and uses all available CPUs.
+The slow configuring and build steps can be restarted if needed.
+They pick up from where they left off.
      
 ## Running
 
