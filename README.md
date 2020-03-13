@@ -2,10 +2,11 @@
 
 Temporary repository for some modifications to the Firestorm virtual world viewer
 
-The sources for Firestorm are maintained elsewhere, with Mercurial.  This is temporary storage for some fixes under
+The sources for Firestorm are maintained elsewhere.  This is temporary storage for some fixes under
 development. The changes are intended to work around some problems in the simulator by adding some sanity checks
-to the viewer for motion that crosses sim boundaries. In time, these should be merged back into the Mercurial
-mainstream.
+to the viewer for motion that crosses sim boundaries. In time, these should be merged back into the
+mainstream. The first version of these changes went into Firestorm in late 2018, and a new version is 
+under development in 2020. 
 
 # Build procedure
 
@@ -30,3 +31,4 @@ Run:
     autobuild -m64 configure -c ReleaseFS_open -- --clean -DLL_TESTS:BOOL=FALSE
     autobuild -m64 build -c ReleaseFS_open
 
+For Ubuntu 18.04 LTS, see (./BUILDINGONLINUX.md)
