@@ -1,8 +1,9 @@
 # Firestorm build procedure 2020, for Firestorm 6.3.8
 
-Unofficial.
+**Unofficial**
 
 John Nagle
+
 Animats Resident
 
 March 12, 2020
@@ -36,9 +37,9 @@ Most of what's needed is already in Ubuntu 18.04 LTS. In particular,
 the standard GCC compiler, gcc 7.5.0, will work. No need to install
 some antique GCC compiler any more.  Just install
   
-   pip install llbase
-   sudo apt-get install cmake
-   sudo apt-get libxinerama-dev
+    pip install llbase
+    sudo apt-get install cmake
+    sudo apt-get libxinerama-dev
    
 Surprisingly, that's all that was needed. It's possible that something
 else may be needed on some other system, but if something is missing,
