@@ -31,4 +31,4 @@ Run:
     autobuild -m64 configure -c ReleaseFS_open -- --clean -DLL_TESTS:BOOL=FALSE
     autobuild -m64 build -c ReleaseFS_open
 
-For Ubuntu 18.04 LTS, see (./BUILDINGONLINUX.md)
+For Ubuntu 18.04 LTS, see [here](./BUILDINGONLINUX.md)
