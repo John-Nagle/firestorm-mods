@@ -122,6 +122,12 @@
 
 //#define DEBUG_UPDATE_TYPE
 
+#define DEBUG_REGION_CROSS                                      // <FS:JN> avatar and vehicle region crossing debug output and checking
+
+#ifdef DEBUG_REGION_CROSS
+static LLUUID sDebugPrintThisUUID = LLUUID::null;               // set to UUID seen as parent of avatar, usually a vehicle, for debug print 
+#endif // DEBUG_REGION_CROSS
+
 BOOL		LLViewerObject::sVelocityInterpolate = TRUE;
 BOOL		LLViewerObject::sPingInterpolate = TRUE; 
 
@@ -1250,6 +1256,10 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 	U8	material = 0;
 	U8 click_action = 0;
 	U32 crc = 0;
+	
+#ifdef DEBUG_REGION_CROSS
+    LLUUID msg_parent_uuid = LLUUID::null;                                    // UUID directly from update msg, with no adjustments.
+#endif // DEBUG_REGION_CROSS
 
 	bool old_special_hover_cursor = specialHoverCursor();
 
@@ -2064,7 +2074,9 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 				}
 
 				LLViewerObject *sent_parentp = gObjectList.findObject(parent_uuid);
-
+#ifdef DEBUG_REGION_CROSS                                                       // <FS:JN> region crossing debugging
+				msg_parent_uuid = parent_uuid;			
+#endif // DEBUG_REGION_CROSS
 				//
 				// Check to see if we have the corresponding viewer object for the parent.
 				//
@@ -2419,7 +2431,42 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 
 			avatar->clampAttachmentPositions();
 		}
-		
+
+#ifdef DEBUG_REGION_CROSS                                                       // <FS:JN> region crossing debugging
+		//  Dump message info for own avatar or vehicle on which avatar is riding.
+		//  This gives info about what's happening to the avatar/vehicle connection during a region crossing.
+		if (asAvatar() && asAvatar()->isSelf())                                     // if about our avatar
+		{   LLViewerObject* parent = dynamic_cast<LLViewerObject*>(getParent());    // parent if any
+		    std::string parentuuid; 
+		    if (parent)
+		    {   parentuuid = parent->getID().asString(); 
+		        if (sDebugPrintThisUUID != parent->getID())
+		        {   LL_INFOS() << "Avatar has new parent UUID: " << parentuuid << LL_ENDL;
+		            sDebugPrintThisUUID = parent->getID();                          // save parent UUID for debug print
+		        }
+		    } 
+		    else 
+		    {   parentuuid = "(None)"; }                                            // need this printable
+	        char ip_string[256] = "?";                                              // oversize, but safe
+	        if (mesgsys) { u32_to_ip_string(mesgsys->getSenderIP(),ip_string); }       // edit into string
+		    LL_INFOS() << "Avatar update msg from " << ip_string << 
+		    " type: " << update_type << " compressed: " << (dp != 0) << " update type: " << update_type << 
+		    " Parent: " << parentuuid << " Parent in msg: " << (msg_parent_uuid.isNull() ? "(none)" : msg_parent_uuid.asString()) << 		    
+		    " Parenting change: " << b_changed_status << 
+		    " Region: " << getRegion()->getName() << " PositionAgent: " << getPositionAgent() <<
+		    " Velocity: " << getVelocity() << "Ang. Vel: " << getAngularVelocity() << " Accel: " << getAcceleration() << LL_ENDL; // JN 
+	    } else if (getID() == sDebugPrintThisUUID)                                  // if this is an update of the avatar's parent vehicle/sit object
+	    {   char ip_string[256] = "?";                                              // oversize, but safe
+	        if (mesgsys) { u32_to_ip_string(mesgsys->getSenderIP(),ip_string); }    // edit into string
+	        LL_INFOS() << "Vehicle/seat update msg from " <<
+	        ip_string <<   
+	        " type: " << update_type << " compressed: " << (dp != 0) << " update type: " << update_type << 
+		    " Vehicle UUID: " << getID().asString() << 
+		    " Parenting change: " << b_changed_status << 
+		    " Region: " << getRegion()->getName() << " PositionAgent: " << getPositionAgent() <<
+		    " Velocity: " << getVelocity() << " Ang. Vel: " << getAngularVelocity() << " Accel: " << getAcceleration() << LL_ENDL; // JN 
+	    }
+#endif // DEBUG_REGION_CROSS		
 		// If we're snapping the position by more than 0.5m, update LLViewerStats::mAgentPositionSnaps
 		if ( asAvatar() && asAvatar()->isSelf() && (mag_sqr > 0.25f) )
 		{
@@ -2742,6 +2789,9 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& frame_tim
 				if (fsExperimentalRegionCrossingMovementFix == 1)
 				{
 				// </FS:Ansariel>
+				//  EXPERIMENTAL - JN
+				////setAngularVelocity(LLVector3::zero);                // stop rotation when off region
+				//  END EXPERIMENTAL - JN
 				// Check for how long we are crossing.
 				// Note: theoretically we can find time from velocity, acceleration and
 				// distance from border to new position, but it is not going to work
