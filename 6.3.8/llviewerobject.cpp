@@ -897,7 +897,14 @@ BOOL LLViewerObject::setParent(LLViewerObject* parent)
 {
 	if(mParent != parent)
 	{
-		LLViewerObject* old_parent = (LLViewerObject*)mParent ;		
+		LLViewerObject* old_parent = (LLViewerObject*)mParent ;
+#ifdef DEBUG_REGION_CROSS
+		if (asAvatar() && asAvatar()->isSelf())
+		{   LL_INFOS() << "Self avatar parent of " << this->getID().asString() << " changed from " <<
+		    (old_parent ? old_parent->getID().asString() : "(none)") << " to " <<
+		    (parent ? parent->getID().asString() : "(none)") << LL_ENDL;
+		}
+#endif // DEBUG_REGION_CROSS	
 		BOOL ret = LLPrimitive::setParent(parent);
 		if(ret && old_parent && parent)
 		{
@@ -2237,6 +2244,9 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 														mRegionp->getHost().getAddress(),
 														mRegionp->getHost().getPort());
 					}
+#ifdef DEBUG_REGION_CROSS                                                       // <FS:JN> region crossing debugging
+				    msg_parent_uuid = parent_uuid;			
+#endif // DEBUG_REGION_CROSS
 					sent_parentp = gObjectList.findObject(parent_uuid);
 					
 					if (isAvatar())
@@ -2454,7 +2464,7 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 		    " Parent: " << parentuuid << " Parent in msg: " << (msg_parent_uuid.isNull() ? "(none)" : msg_parent_uuid.asString()) << 		    
 		    " Parenting change: " << b_changed_status << 
 		    " Region: " << getRegion()->getName() << " PositionAgent: " << getPositionAgent() <<
-		    " Velocity: " << getVelocity() << "Ang. Vel: " << getAngularVelocity() << " Accel: " << getAcceleration() << LL_ENDL; // JN 
+		    " Velocity: " << getVelocity() << " Ang. Vel: " << getAngularVelocity() << " Accel: " << getAcceleration() << LL_ENDL; // JN 
 	    } else if (getID() == sDebugPrintThisUUID)                                  // if this is an update of the avatar's parent vehicle/sit object
 	    {   char ip_string[256] = "?";                                              // oversize, but safe
 	        if (mesgsys) { u32_to_ip_string(mesgsys->getSenderIP(),ip_string); }    // edit into string
