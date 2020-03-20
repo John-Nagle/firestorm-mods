@@ -61,14 +61,14 @@ def parseline(s) :
     
 def dologline(line, lineno) :
     try :
-        items = parseline(line)                                         # parse if possible
-        if items :                                                      # if got something
-            pos = items["PositionAgent"]
-            vel = items["Velocity"]
-            time = items["time"]
-            region = items["region"]
+        item = parseline(line)                                         # parse if possible
+        if item :                                                      # if got something
+            pos = item["PositionAgent"]
+            vel = item["Velocity"]
+            time = item["time"]
+            region = item["region"]
             print("%s %s %s %s" % (time, region, pos, vel))
-        return items
+        return item
                     
     except ValueError as err :
         print("Line %d: ERROR %s" % (lineno, err))
@@ -89,12 +89,8 @@ def fixtimestamp(items) :
             datetime.datetime.strptime(item["date"],"%Y-%m-%d").date(),
             datetime.datetime.strptime(item["time"],"%H:%M:%S").time(),
             tzinfo=datetime.timezone.utc)
-        item['timestamp'] = itemtime.timestamp() + timeoffset
-            
-        ###print(datetime.datetime.strptime(item["time"],"%H:%M:%S"))
-        ###print(datetime.datetime.strptime(item["date"],"%Y-%m-%d"))  
-        ###print(item["time"], item["date"],item['timestamp'])
-        timeoffset += interval
+        item['timestamp'] = itemtime.timestamp() + timeoffset           
+        timeoffset += interval                                          # advance fraction of second
         
 def addtimestamp(items) :
     """
@@ -111,7 +107,7 @@ def addtimestamp(items) :
             secitems.append(item)                                       # save for this second
         else :                                                          # done with this second
             fixtimestamp(secitems)                                      # space out in time
-            secitems = []                                               # done with this second
+            secitems = [item]                                           # done with this second
     fixtimestamp(secitems)                                              # do final items
     return 
     
@@ -129,10 +125,36 @@ def dologfile(filename, verbose) :
                 item = dologline(line,++lineno)                         # do this line
                 if item :
                     items.append(item)                                  # all items in memory
+            # Done reading and parsing.
             addtimestamp(items)                                         # add a timestamp field to each item
+            analyze1(items)                                             # position from velocity
                 
     except IOError as err :
-        print("Unable to open  \"%s\": %s" % (filename,err))           
+        print("Unable to open  \"%s\": %s" % (filename,err))
+        
+def analyze1(items) :
+    """
+    Log item analysis 1: velocity from position differences
+    """
+    if (len(items) == 0):
+        return
+    startitem = items[0]
+    t0 = items[0]['timestamp']
+    starttime = t0
+    p0 = items[0]['PositionAgent']
+    for item in items[1:] :
+        ####print(item)
+        t1 = item['timestamp']
+        p1 = item['PositionAgent']
+        dt = t1 - t0                            # time delta
+        dp = p1 - p0
+        calcvel = dp * (1/dt)
+        pos = item['PositionAgent']
+        vel = item['Velocity']
+        region = item["region"]
+        print("%6.2f %s %s %s %s" % (t1-starttime, region, pos, vel, calcvel))
+        t0 = t1
+        p0 = p1       
     
 def unittest(s) :
     s = s.strip()
