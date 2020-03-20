@@ -7,6 +7,8 @@
 import re
 import argparse
 import numpy
+import time
+import datetime
 
 #   Test case for unit test. One log line.
 SAMPLELINE = '''
@@ -66,9 +68,52 @@ def dologline(line, lineno) :
             time = items["time"]
             region = items["region"]
             print("%s %s %s %s" % (time, region, pos, vel))
+        return items
                     
     except ValueError as err :
         print("Line %d: ERROR %s" % (lineno, err))
+        
+def fixtimestamp(items) :
+    """
+    Fix timestamp on items
+    
+    These items all have the same timestamp. Space them out in time
+    """
+    cnt = len(items)
+    if (cnt == 0) :
+        return                          # nothing to do
+    interval = 1.0/cnt                  # time interval
+    timeoffset = 0.0
+    for item in items :                 # timestamp each item
+        itemtime = datetime.datetime.combine(
+            datetime.datetime.strptime(item["date"],"%Y-%m-%d").date(),
+            datetime.datetime.strptime(item["time"],"%H:%M:%S").time(),
+            tzinfo=datetime.timezone.utc)
+        item['timestamp'] = itemtime.timestamp() + timeoffset
+            
+        ###print(datetime.datetime.strptime(item["time"],"%H:%M:%S"))
+        ###print(datetime.datetime.strptime(item["date"],"%Y-%m-%d"))  
+        ###print(item["time"], item["date"],item['timestamp'])
+        timeoffset += interval
+        
+def addtimestamp(items) :
+    """
+    Add timestamp to each item.
+    
+    This isn't really sound.  We only have 1 second resolution on times,
+    so if we have multiple items from the same second, we give them
+    timestamps equally spaced across the seconds.
+    """
+    secitems = []                                                       # items from this second
+    for item in items :
+        time = item["time"]                                             # get timestamp
+        if secitems == [] or secitems[0]["time"] == time :              # if same second
+            secitems.append(item)                                       # save for this second
+        else :                                                          # done with this second
+            fixtimestamp(secitems)                                      # space out in time
+            secitems = []                                               # done with this second
+    fixtimestamp(secitems)                                              # do final items
+    return 
     
     
 def dologfile(filename, verbose) :
@@ -79,8 +124,12 @@ def dologfile(filename, verbose) :
         with open(filename,"r") as fd :                                 # open file
             print("Reading \"%s\"." % (filename,))                      # processing this file
             lineno = 0                                                  # for messages
+            items = []
             for line in fd :                                            # for each line in file
-                dologline(line,++lineno)                                # do this line
+                item = dologline(line,++lineno)                         # do this line
+                if item :
+                    items.append(item)                                  # all items in memory
+            addtimestamp(items)                                         # add a timestamp field to each item
                 
     except IOError as err :
         print("Unable to open  \"%s\": %s" % (filename,err))           
