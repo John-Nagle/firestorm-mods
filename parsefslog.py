@@ -30,7 +30,10 @@ class Logread :
     UPDATEMSGVECTORRE = re.compile(r"\s*([\w .]+):\s*{([\d\s., -]+[} ])\s*$") # name: {vector} 
 
     VECTORRE = re.compile(r"\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*")    # float, float, float
-
+    
+    def __init__(self, verbose) :
+        self.verbose = verbose                                              # more print output
+                                
     def parseline(self, s) :
         '''
         Parse log line into a dictionary of fields. 
@@ -178,7 +181,7 @@ def main() :
     verbose = args.verbose                                              # verbose flag
     files = args.logfile                                                # files to do
     for filename in args.logfile :                                      # for filenames given
-        lr = Logread()
-        lr.dologfile(filename,args.verbose)                        # do the log file
+        lr = Logread(args.verbose)
+        lr.dologfile(filename)                                          # do the log file
     
 main()
