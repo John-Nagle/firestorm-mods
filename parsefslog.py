@@ -7,6 +7,7 @@
 import re
 import argparse
 import numpy
+import math
 import time
 import datetime
 
@@ -15,6 +16,37 @@ SAMPLELINE = '''
 2020-03-17T21:20:22Z INFO # newview/llviewerobject.cpp(2471) processUpdateMessage : Vehicle/seat update msg from 216.82.49.146 type: 1 compressed: 1 update type: 1 Vehicle UUID: fdb6774e-0eac-4947-fc52-262960648d5f Parenting change: 0 Region: Vine PositionAgent: { -1.067578, 150.288254, 109.260979 } Velocity: { -13.595909, 6.591904, -0.162109 } Ang. Vel: { 0.192383, -0.405281, -0.010742 } Accel: { -0.344730, 0.403328, -5.628017 }
 '''
 
+
+#
+#   class Lowpassfilter
+#
+class Lowpassfilter :
+    '''
+    Low-pass filter for smoothing
+    '''
+    
+    def __init__(self, filterconstant) :
+        '''
+        Set up very simple filter
+        '''
+        self.filterconstant = filterconstant                        # from 0 to 1
+        self.filtered = None
+        
+    def update(self, value) :
+        '''
+        Add value to filter
+        '''
+        if self.filtered is None :
+            self.filtered = value
+        else :
+            self.filtered = (self.filtered * (1.0 - self.filterconstant) + value) * 0.5 # add value to filter. Can be vector or scalar
+             
+    def get(self) :
+        '''
+        Return filtered value
+        '''
+        return self.filtered                    
+        
 #
 #   class Logread
 #
@@ -31,8 +63,12 @@ class Logread :
 
     VECTORRE = re.compile(r"\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*")    # float, float, float
     
-    def __init__(self, verbose) :
+    def __init__(self, verbose, filterconstant) :
         self.verbose = verbose                                              # more print output
+        self.starttime = None                                               # starting time of this data set
+        self.filteredvel = Lowpassfilter(filterconstant)                    # filtered velocity
+        self.filteredvelerr = Lowpassfilter(filterconstant)                 # filtered square error
+        self.filteredangrate = Lowpassfilter(filterconstant)                # filtered angular rate
                                 
     def parseline(self, s) :
         '''
@@ -65,7 +101,7 @@ class Logread :
                         outputfields[field.group(1)] = numpy.array([float(vectoritem.group(1)), float(vectoritem.group(2)), float(vectoritem.group(3))])
                 ####print("Vector fields: %s" % (vectorfields))           
                 return outputfields
-        return None                                                         # did not match
+        return None                                                        # did not match
     
     def dologline(self, line, lineno) :
         try :
@@ -139,16 +175,32 @@ class Logread :
                 
         except IOError as err :
             print("Unable to open  \"%s\": %s" % (filename,err))
-        
+            
+    def analyzeitem(self, item) :
+        '''
+        Analysis of one individual log item
+        '''
+        calcvel = item['calcvel']
+        self.filteredvel.update(calcvel)                                    # Update velocity filter
+        #   First try at filtered standard deviation
+        err = calcvel-self.filteredvel.get()                                # error from filtered value
+        errmag = numpy.linalg.norm(err)
+        self.filteredvelerr.update(errmag*errmag)
+        filterederrmag = self.filteredvelerr.get()
+        t1 = item['timestamp']
+        pos = item['PositionAgent']
+        vel = item['Velocity']
+        region = item["region"]
+        print("%6.2f %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, calcvel, math.sqrt(errmag), math.sqrt(filterederrmag)))
+              
     def analyze1(self, items) :
         """
         Log item analysis 1: velocity from position differences
         """
         if (len(items) == 0):
             return
-        startitem = items[0]
         t0 = items[0]['timestamp']
-        starttime = t0
+        self.starttime = t0
         p0 = items[0]['PositionAgent']
         for item in items[1:] :
             ####print(item)
@@ -157,12 +209,10 @@ class Logread :
             dt = t1 - t0                            # time delta
             dp = p1 - p0
             calcvel = dp * (1/dt)
-            pos = item['PositionAgent']
-            vel = item['Velocity']
-            region = item["region"]
-            print("%6.2f %s %s %s %s" % (t1-starttime, region, pos, vel, calcvel))
+            item['calcvel'] = calcvel               # velocity from position
             t0 = t1
-            p0 = p1       
+            p0 = p1
+            self.analyzeitem(item)      
     
 def unittest(s) :
     s = s.strip()
@@ -180,8 +230,9 @@ def main() :
     args = parser.parse_args()                                          # parse command line
     verbose = args.verbose                                              # verbose flag
     files = args.logfile                                                # files to do
+    filterconstant = 0.1                                                # ***TEMP***
     for filename in args.logfile :                                      # for filenames given
-        lr = Logread(args.verbose)
+        lr = Logread(args.verbose, filterconstant)
         lr.dologfile(filename)                                          # do the log file
     
 main()
