@@ -120,7 +120,7 @@ class Logread :
         return 
     
     
-    def dologfile(self, filename, verbose) :
+    def dologfile(self, filename) :
         """
         Process one logfile
         """
