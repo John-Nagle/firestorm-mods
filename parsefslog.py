@@ -87,8 +87,7 @@ class Logread :
         self.starttime = None                                               # starting time of this data set
         self.items = None                                                   # the data items
         self.filteredvel = Lowpassfilter(filterconstant)                    # filtered velocity
-        self.filteredvelerr = Lowpassfilter(filterconstant)                 # filtered square error
-        self.filteredangrate = Lowpassfilter(filterconstant)                # filtered angular rate
+        self.filteredangvel = Lowpassfilter(filterconstant)                 # filtered square error
                                 
     def parseline(self, s) :
         '''
@@ -204,19 +203,21 @@ class Logread :
         '''
         if regionchange :                                                   # on region change, reset filters
             self.filteredvel.clear()
-            self.filteredvelerr.clear()
+            self.filteredangvel.clear()
         vel = item['Velocity']
         self.filteredvel.updatetimed(vel,dt)
         smoothedvel = self.filteredvel.get()
-        err = vel - smoothedvel  
-        errmag = numpy.linalg.norm(err)
-        self.filteredvelerr.update(errmag*errmag,dt)
-        filterederrmag = self.filteredvelerr.get()       
+        velerr = numpy.linalg.norm(vel - smoothedvel) 
+        
+        angvel = item['Ang. Vel']
+        self.filteredangvel.updatetimed(angvel,dt)
+        smoothedangvel = self.filteredangvel.get()
+        angvelerr = numpy.linalg.norm(angvel - smoothedangvel)
         t1 = item['timestamp']
         pos = item['PositionAgent']
-        ####vel = item['Velocity']
         region = item["region"]
-        print("%6.2f %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, errmag, math.sqrt(filterederrmag)))
+        print("%6.2f %s %s %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, 
+            angvel, smoothedangvel, velerr, angvelerr))
               
     def analyze1(self, items) :
         """
