@@ -56,6 +56,8 @@ class Lowpassfilter :
             self.filtered = value
         else :
             filterval = self.filterconstant * dt
+            if (filterval > 1.0) :
+                filterval = 1.0
             self.filtered = self.filtered * (1.0 - filterval) + value*filterval # add value to filter. Can be vector or scalar
 
         
@@ -191,8 +193,8 @@ class Logread :
                         items.append(item)                                  # all items in memory
                 # Done reading and parsing.
                 self.addtimestamp(items)                                    # add a timestamp field to each item
-                self.items = items                                          # save items
-                self.analyze1(items)                                        # position from velocity
+                self.items = self.analyze1(items)                           # position from velocity
+                xx = self.items[0]['velerr'] # ***TEMP*** 
                 
         except IOError as err :
             print("Unable to open  \"%s\": %s" % (filename,err))
@@ -213,11 +215,14 @@ class Logread :
         self.filteredangvel.updatetimed(angvel,dt)
         smoothedangvel = self.filteredangvel.get()
         angvelerr = numpy.linalg.norm(angvel - smoothedangvel)
+        item['velerr'] = abs(velerr)
+        item['angvelerr'] = abs(angvelerr)
         t1 = item['timestamp']
         pos = item['PositionAgent']
-        region = item["region"]
+        region = item['region']
         print("%6.2f %s %s %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, 
             angvel, smoothedangvel, velerr, angvelerr))
+        return item
               
     def analyze1(self, items) :
         """
@@ -229,19 +234,20 @@ class Logread :
         r0 = items[0]['region']
         self.starttime = t0
         p0 = items[0]['PositionAgent']
+        items[0]['velerr'] = 0.0                    # no error at start
+        newitems = [items[0]]
         for item in items[1:] :
             ####print(item)
             t1 = item['timestamp']
             p1 = item['PositionAgent']
             r1 = item['region']
             dt = t1 - t0                            # time delta
-            dp = p1 - p0
-            calcvel = dp * (1/dt)
-            item['calcvel'] = calcvel               # velocity from position
-            self.analyzeitem(item, dt, r0 != r1)   
+            newitem = self.analyzeitem(item, dt, r0 != r1)   
             t0 = t1
             p0 = p1
             r0 = r1
+            newitems.append(newitem)
+        return newitems
                 
     def writecsv1(self, filename) :
         '''
@@ -250,7 +256,7 @@ class Logread :
         with open(filename,"w") as wf :
             for item in self.items :
                 t = item['timestamp']
-                s = "%6.3f,%6.3f,%s" % (t-self.starttime,item['Velocity'][2],item['region'])
+                s = "%6.3f,%6.3f,%6.3f,%s" % (t-self.starttime,item['Velocity'][2],item['velerr'],item['region'])
                 print(s,file=wf)
     
 def unittest(s) :
@@ -269,7 +275,7 @@ def main() :
     args = parser.parse_args()                                          # parse command line
     verbose = args.verbose                                              # verbose flag
     files = args.logfile                                                # files to do
-    filterconstant = 0.2                                                # ***TEMP***
+    filterconstant = 0.5                                                # ***TEMP***
     print("Filter constant: %1.2f" % (filterconstant,))
     for filename in args.logfile :                                      # for filenames given
         lr = Logread(args.verbose, filterconstant)
