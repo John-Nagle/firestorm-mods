@@ -10,6 +10,7 @@ import numpy
 import math
 import time
 import datetime
+import ntpath
 
 #   Test case for unit test. One log line.
 SAMPLELINE = '''
@@ -32,6 +33,12 @@ class Lowpassfilter :
         self.filterconstant = filterconstant                        # from 0 to 1
         self.filtered = None
         
+    def clear(self) :
+        '''
+        Clear filter, start fresh from next value
+        '''
+        self.filtered = None
+        
     def update(self, value) :
         '''
         Add value to filter
@@ -39,7 +46,7 @@ class Lowpassfilter :
         if self.filtered is None :
             self.filtered = value
         else :
-            self.filtered = (self.filtered * (1.0 - self.filterconstant) + value) * 0.5 # add value to filter. Can be vector or scalar
+            self.filtered = self.filtered * (1.0 - self.filterconstant) + value*self.filterconstant # add value to filter. Can be vector or scalar
              
     def get(self) :
         '''
@@ -66,6 +73,7 @@ class Logread :
     def __init__(self, verbose, filterconstant) :
         self.verbose = verbose                                              # more print output
         self.starttime = None                                               # starting time of this data set
+        self.items = None                                                   # the data items
         self.filteredvel = Lowpassfilter(filterconstant)                    # filtered velocity
         self.filteredvelerr = Lowpassfilter(filterconstant)                 # filtered square error
         self.filteredangrate = Lowpassfilter(filterconstant)                # filtered angular rate
@@ -111,7 +119,8 @@ class Logread :
                 vel = item["Velocity"]
                 time = item["time"]
                 region = item["region"]
-                print("%s %s %s %s" % (time, region, pos, vel))
+                if self.verbose :                                           # print basic input data
+                    print("%s %s %s %s" % (time, region, pos, vel))
             return item
                     
         except ValueError as err :
@@ -171,27 +180,31 @@ class Logread :
                         items.append(item)                                  # all items in memory
                 # Done reading and parsing.
                 self.addtimestamp(items)                                    # add a timestamp field to each item
+                self.items = items                                          # save items
                 self.analyze1(items)                                        # position from velocity
                 
         except IOError as err :
             print("Unable to open  \"%s\": %s" % (filename,err))
             
-    def analyzeitem(self, item) :
+    def analyzeitem(self, item, regionchange) :
         '''
         Analysis of one individual log item
         '''
-        calcvel = item['calcvel']
-        self.filteredvel.update(calcvel)                                    # Update velocity filter
-        #   First try at filtered standard deviation
-        err = calcvel-self.filteredvel.get()                                # error from filtered value
+        if regionchange :                                                   # on region change, reset filters
+            self.filteredvel.clear()
+            self.filteredvelerr.clear()
+        vel = item['Velocity']
+        self.filteredvel.update(vel)
+        smoothedvel = self.filteredvel.get()
+        err = vel - smoothedvel  
         errmag = numpy.linalg.norm(err)
         self.filteredvelerr.update(errmag*errmag)
-        filterederrmag = self.filteredvelerr.get()
+        filterederrmag = self.filteredvelerr.get()       
         t1 = item['timestamp']
         pos = item['PositionAgent']
-        vel = item['Velocity']
+        ####vel = item['Velocity']
         region = item["region"]
-        print("%6.2f %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, calcvel, math.sqrt(errmag), math.sqrt(filterederrmag)))
+        print("%6.2f %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, errmag, math.sqrt(filterederrmag)))
               
     def analyze1(self, items) :
         """
@@ -200,19 +213,32 @@ class Logread :
         if (len(items) == 0):
             return
         t0 = items[0]['timestamp']
+        r0 = items[0]['region']
         self.starttime = t0
         p0 = items[0]['PositionAgent']
         for item in items[1:] :
             ####print(item)
             t1 = item['timestamp']
             p1 = item['PositionAgent']
+            r1 = item['region']
             dt = t1 - t0                            # time delta
             dp = p1 - p0
             calcvel = dp * (1/dt)
             item['calcvel'] = calcvel               # velocity from position
+            self.analyzeitem(item, r0 != r1)   
             t0 = t1
             p0 = p1
-            self.analyzeitem(item)      
+            r0 = r1
+                
+    def writecsv1(self, filename) :
+        '''
+        Write CSV file of raw Z values
+        '''
+        with open(filename,"w") as wf :
+            for item in self.items :
+                t = item['timestamp']
+                s = "%6.3f,%6.3f,%s" % (t-self.starttime,item['Velocity'][2],item['region'])
+                print(s,file=wf)
     
 def unittest(s) :
     s = s.strip()
@@ -230,9 +256,12 @@ def main() :
     args = parser.parse_args()                                          # parse command line
     verbose = args.verbose                                              # verbose flag
     files = args.logfile                                                # files to do
-    filterconstant = 0.1                                                # ***TEMP***
+    filterconstant = 0.2                                                # ***TEMP***
+    print("Filter constant: %1.2f" % (filterconstant,))
     for filename in args.logfile :                                      # for filenames given
         lr = Logread(args.verbose, filterconstant)
         lr.dologfile(filename)                                          # do the log file
+        outfilename = ntpath.basename(filename) + "z.csv"               # Z values CSV file
+        lr.writecsv1(outfilename)                                       # write CSV file
     
 main()
