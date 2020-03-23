@@ -47,6 +47,18 @@ class Lowpassfilter :
             self.filtered = value
         else :
             self.filtered = self.filtered * (1.0 - self.filterconstant) + value*self.filterconstant # add value to filter. Can be vector or scalar
+            
+    def updatetimed(self, value, dt) :
+        '''
+        Add value to filter, weighted by time
+        '''
+        if self.filtered is None :
+            self.filtered = value
+        else :
+            filterval = self.filterconstant * dt
+            self.filtered = self.filtered * (1.0 - filterval) + value*filterval # add value to filter. Can be vector or scalar
+
+        
              
     def get(self) :
         '''
@@ -186,7 +198,7 @@ class Logread :
         except IOError as err :
             print("Unable to open  \"%s\": %s" % (filename,err))
             
-    def analyzeitem(self, item, regionchange) :
+    def analyzeitem(self, item, dt, regionchange) :
         '''
         Analysis of one individual log item
         '''
@@ -194,11 +206,11 @@ class Logread :
             self.filteredvel.clear()
             self.filteredvelerr.clear()
         vel = item['Velocity']
-        self.filteredvel.update(vel)
+        self.filteredvel.updatetimed(vel,dt)
         smoothedvel = self.filteredvel.get()
         err = vel - smoothedvel  
         errmag = numpy.linalg.norm(err)
-        self.filteredvelerr.update(errmag*errmag)
+        self.filteredvelerr.update(errmag*errmag,dt)
         filterederrmag = self.filteredvelerr.get()       
         t1 = item['timestamp']
         pos = item['PositionAgent']
@@ -225,7 +237,7 @@ class Logread :
             dp = p1 - p0
             calcvel = dp * (1/dt)
             item['calcvel'] = calcvel               # velocity from position
-            self.analyzeitem(item, r0 != r1)   
+            self.analyzeitem(item, dt, r0 != r1)   
             t0 = t1
             p0 = p1
             r0 = r1
