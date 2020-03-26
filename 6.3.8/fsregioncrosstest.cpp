@@ -1,19 +1,8 @@
 //
 //  Unit test for fsregioncross.h
 //
-//
-//  Dummy types
-//
-typedef float F32;
-typedef bool BOOL;
-
+#include "fsregioncrosstest.h"
 #include "fsregioncross.h"
-
-class LLViewerObject 
-{
-public:
-    RegionCrossExtrapolate mExtrap;                                 // extrapolatormExt
-};
 
 
 

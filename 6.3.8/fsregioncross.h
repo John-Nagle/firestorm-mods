@@ -33,17 +33,51 @@
 //
 #include <memory>
 #include <limits>
+#include "fsregioncrosstest.h"  // ***TEMP***
 
 class LLViewerObject;                                               // forward declaration
 
-class RegionCrossExtrapolateImpl {                                  // Implementation of region cross extrapolation control
+//
+//  LowPassFilter -- a simple Kalman low-pass filter
+//
+class LowPassFilter 
+{
 private:
-    //  ***MORE***
+    LLVector3 mFiltered;                                            // filtered value
+    F32 mFilterConstant;                                            // 0 to 1.0, weight of new values
+public:
+    void update(const LLVector3 val, F32 dt)
+    {
+        //  ***MORE***
+    }
+    const LLVector3 get() const 
+    {
+        LLVector3 dummy;
+        return(dummy);                                              // ***TEMP***
+    }
+    
+    void clear() 
+    {
+    }
+};
+
+
+class RegionCrossExtrapolateImpl ////:                                  // Implementation of region cross extrapolation control
+ ////   mPreviousUpdateTime(0.0)                                        // no previous time yet
+{
+private:
+    const LLViewerObject& mOwner;                                   // ref to owning object
+    F64 mPreviousUpdateTime;                                        // previous update time
+    LowPassFilter mFilteredVel;                                     // filtered velocity
+    LowPassFilter mFilteredAngVel;                                  // filtered angular velocity
 
 public:
-    RegionCrossExtrapolateImpl()                                    // constructor
+    RegionCrossExtrapolateImpl(const LLViewerObject& vo) :          // constructor
+    mOwner(vo),                                                     // back ref to owner
+    mPreviousUpdateTime(0)                                          // time of last update
     {
         printf("RegionCrossExtrapolateImpl initialized.\n");        // ***TEMP***
+        
     }
     
     ~RegionCrossExtrapolateImpl()                                   // destructor
@@ -51,10 +85,7 @@ public:
         printf("RegionCrossExtrapolateImpl deleted.\n");            // ***TEMP***
     }
 
-    void update(const LLViewerObject& vo)
-    {
-        printf("Update called.\n");                                 // ***TEMP***
-    }
+    void update();                                                  // update on object update message
   
     F32 getextraptimelimit() const 
     {
@@ -83,14 +114,14 @@ protected:
     
 public:
     void update(const LLViewerObject& vo)                           // new object update message received
-    {   if (mImpl.get()) { mImpl->update(vo); }                     // update extrapolator if present
+    {   if (mImpl.get()) { mImpl->update(); }                       // update extrapolator if present
     }
     
     void changedlink(const LLViewerObject& vo)                      // parent or child changed, check if extrapolation object needed
     {
         if (isvehicle(vo))                                          // if this object is now the root of a vehicle with an avatar
         {   if (!mImpl.get())                                       // if no extrapolation implementor
-            {   mImpl.reset(new RegionCrossExtrapolateImpl()); }    // add an extrapolator       
+            {   mImpl.reset(new RegionCrossExtrapolateImpl(vo)); }  // add an extrapolator       
         } else {                                                    // not a vehicle
             if (mImpl.get())
             {   mImpl.reset(); }                                    // no longer needed                           
