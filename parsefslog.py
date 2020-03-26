@@ -17,6 +17,9 @@ SAMPLELINE = '''
 2020-03-17T21:20:22Z INFO # newview/llviewerobject.cpp(2471) processUpdateMessage : Vehicle/seat update msg from 216.82.49.146 type: 1 compressed: 1 update type: 1 Vehicle UUID: fdb6774e-0eac-4947-fc52-262960648d5f Parenting change: 0 Region: Vine PositionAgent: { -1.067578, 150.288254, 109.260979 } Velocity: { -13.595909, 6.591904, -0.162109 } Ang. Vel: { 0.192383, -0.405281, -0.010742 } Accel: { -0.344730, 0.403328, -5.628017 }
 '''
 
+MINPERIOD = 1/45.0                                                  # shortest possible sample interval, SL physics rate
+DEG_TO_RAD = math.pi / 180.0                                        # Degrees to radians conversion constant
+
 
 #
 #   class Lowpassfilter
@@ -55,10 +58,14 @@ class Lowpassfilter :
         if self.filtered is None :
             self.filtered = value
         else :
-            filterval = self.filterconstant * dt
-            if (filterval > 1.0) :
-                filterval = 1.0
-            self.filtered = self.filtered * (1.0 - filterval) + value*filterval # add value to filter. Can be vector or scalar
+            ####   ***NOT MATHEMATICALLY CORRECT*** Smoothing for longer dt is not linear.
+            periods = math.ceil(dt / MINPERIOD)     # do this many times
+            for i in range(periods) :               # inefficient way to handle variable sample times
+                self.filtered = self.filtered * (1.0 - self.filterconstant) + value * self.filterconstant
+            ###filterval = self.filterconstant * dt
+            ####if (filterval > 1.0) :
+            ####    filterval = 1.0
+            ####self.filtered = self.filtered * (1.0 - filterval) + value*filterval # add value to filter. Can be vector or scalar
 
         
              
@@ -194,7 +201,6 @@ class Logread :
                 # Done reading and parsing.
                 self.addtimestamp(items)                                    # add a timestamp field to each item
                 self.items = self.analyze1(items)                           # position from velocity
-                xx = self.items[0]['velerr'] # ***TEMP*** 
                 
         except IOError as err :
             print("Unable to open  \"%s\": %s" % (filename,err))
@@ -215,13 +221,24 @@ class Logread :
         self.filteredangvel.updatetimed(angvel,dt)
         smoothedangvel = self.filteredangvel.get()
         angvelerr = numpy.linalg.norm(angvel - smoothedangvel)
-        item['velerr'] = abs(velerr)
-        item['angvelerr'] = abs(angvelerr)
+        item['velerr'] = velerr
+        item['angvelerr'] = angvelerr
+        #   Calculate maximum project-ahed time
+        ALLOWEDDISTERR = 0.5                            # Maximum allowed distance error, meters
+        ALLOWEDANGERR = 20.0 * DEG_TO_RAD               # Maximum allowed angular error, radians
+        secslin = math.inf
+        if velerr > 0.001 :
+            secslin = ALLOWEDDISTERR / velerr
+        secsang = math.inf
+        if angvelerr > 0.001 :
+            secsang = ALLOWEDANGERR / angvelerr
+        projectmax = min(secslin, secsang)
+        item['projectmax'] = projectmax
         t1 = item['timestamp']
         pos = item['PositionAgent']
         region = item['region']
-        print("%6.2f %s %s %s %s %s %s %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, 
-            angvel, smoothedangvel, velerr, angvelerr))
+        print("%6.2f %s %s %s %s %s %s %1.2f %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, 
+            angvel, smoothedangvel, velerr, angvelerr, projectmax))
         return item
               
     def analyze1(self, items) :
@@ -235,6 +252,8 @@ class Logread :
         self.starttime = t0
         p0 = items[0]['PositionAgent']
         items[0]['velerr'] = 0.0                    # no error at start
+        items[0]['angvelerr'] = 0.0
+        items[0]['projectmax'] = math.inf
         newitems = [items[0]]
         for item in items[1:] :
             ####print(item)
@@ -256,7 +275,7 @@ class Logread :
         with open(filename,"w") as wf :
             for item in self.items :
                 t = item['timestamp']
-                s = "%6.3f,%6.3f,%6.3f,%s" % (t-self.starttime,item['Velocity'][2],item['velerr'],item['region'])
+                s = "%6.3f,%6.3f,%6.3f,%6.3f,%6.3f, %s" % (t-self.starttime,item['Velocity'][2],item['velerr'],item['angvelerr'],item['projectmax'],item['region'])
                 print(s,file=wf)
     
 def unittest(s) :
@@ -275,7 +294,8 @@ def main() :
     args = parser.parse_args()                                          # parse command line
     verbose = args.verbose                                              # verbose flag
     files = args.logfile                                                # files to do
-    filterconstant = 0.5                                                # ***TEMP***
+    filterconstant = 2.0*MINPERIOD                                      # shortest possible interval
+                                                                        # ***TEMP***
     print("Filter constant: %1.2f" % (filterconstant,))
     for filename in args.logfile :                                      # for filenames given
         lr = Logread(args.verbose, filterconstant)
