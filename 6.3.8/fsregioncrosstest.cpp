@@ -5,6 +5,12 @@
 #include "fsregioncross.h"
 #include "fsregioncrosstest.h"
 
+namespace FrameTimer {
+    static F64 mFrameTimer;
+    F64 getElapsedSeconds()
+    {   return(mFrameTimer);    
+    }
+};
 
 
 void test() 

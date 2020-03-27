@@ -26,7 +26,7 @@
  */
 
 #include "fsregioncross.h"
-#include "fsregioncrosstest.cpp"
+#include "fsregioncrosstest.h"
 
 //
 //  Improved region crossing support.
@@ -42,11 +42,13 @@ void RegionCrossExtrapolateImpl::update()
         //  ***IS THERE SOME BETTER WAY TO GET THE TIME OF AN OBJECT UPDATE?***
     }
     mPreviousUpdateTime = now;
+    LLQuaternion rot = mOwner.getRotationRegion(); // transform global to local
+    const LLQuaternion inverserot = rot.conjugate();
     LLVector3 vel = mOwner.getVelocity();                       // velocity in world coords
-    vel = vel / mOwner.getRotationRegion();                     // velocity in object coords
+    vel = vel * inverserot;                                     // velocity in object coords
     mFilteredVel.update(vel,dt);                                // accum into filter
     LLVector3 angvel = mOwner.getAngularVelocity();             // angular velocity in world coords
-    angvel = angvel / mOwner.getRotationRegion();               // angular velocity in object coords
+    angvel = angvel * inverserot;                               // angular velocity in object coords
     mFilteredAngVel.update(angvel, dt);                         // accum into filter
         
 }
