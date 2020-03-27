@@ -26,6 +26,7 @@
  */
 
 #include "fsregioncross.h"
+#include "fsregioncrosstest.cpp"
 
 //
 //  Improved region crossing support.

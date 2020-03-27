@@ -33,7 +33,7 @@
 //
 #include <memory>
 #include <limits>
-#include "fsregioncrosstest.h"  // ***TEMP***
+#include "fsregioncrosstestdummies.h"  // ***TEMP***
 
 class LLViewerObject;                                               // forward declaration
 
@@ -62,8 +62,8 @@ public:
 };
 
 
-class RegionCrossExtrapolateImpl ////:                                  // Implementation of region cross extrapolation control
- ////   mPreviousUpdateTime(0.0)                                        // no previous time yet
+class RegionCrossExtrapolateImpl ////:                              // Implementation of region cross extrapolation control
+ ////   mPreviousUpdateTime(0.0)                                    // no previous time yet
 {
 private:
     const LLViewerObject& mOwner;                                   // ref to owning object
@@ -97,11 +97,12 @@ public:
 //
 //  RegionCrossExtrapolate -- calculate safe limit on how long to extrapolate after a region crossing
 //
-//  Member object of llVieweObject. For vehicles, a RegionCrossExtrapolateImpl is allocated to do the real work.
+//  Member object of llViewerObject. For vehicles, a RegionCrossExtrapolateImpl is allocated to do the real work.
 //  Call "update" for each new object update.
 //  Call "changedlink" for any object update which changes parenting.
 //  Get the extrapolation limit time with getextraptimelimit.
 //
+class LLViewerObject;                                               // forward
 class RegionCrossExtrapolate {
 private:
     std::unique_ptr<RegionCrossExtrapolateImpl> mImpl;              // pointer to region cross extrapolator, if present
