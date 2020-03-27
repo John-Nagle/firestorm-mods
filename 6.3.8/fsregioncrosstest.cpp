@@ -2,12 +2,14 @@
 //  Unit test for fsregioncross.h
 //
 #include "fsregioncrosstestdummies.h"
-#include "fsregioncrosstest.h"
+////#include "fsregioncrosstest.h"
 
 #include "fsregioncross.h"
 #include "llviewerobjectdummy.h"
 
-
+//
+//  Dummy FrameTimer
+//
 namespace FrameTimer {
     static F64 mFrameTimer;
     F64 getElapsedSeconds()
@@ -23,6 +25,14 @@ namespace FrameTimer {
 void LLViewerObject::parseline(const std::string& s)
 {
 }
+
+//
+//  Dummy quaternion math
+//
+LLVector3 operator*(const LLVector3 &a, const LLQuaternion &rot)	// Rotates a by rot
+{
+}
+
 
 
 
