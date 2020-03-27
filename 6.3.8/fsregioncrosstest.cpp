@@ -1,9 +1,12 @@
 //
 //  Unit test for fsregioncross.h
 //
+#include "fsregioncrosstestdummies.h"
+#include "fsregioncrosstest.h"
 
 #include "fsregioncross.h"
-#include "fsregioncrosstest.h"
+#include "llviewerobjectdummy.h"
+
 
 namespace FrameTimer {
     static F64 mFrameTimer;
@@ -11,6 +14,8 @@ namespace FrameTimer {
     {   return(mFrameTimer);    
     }
 };
+
+
 
 
 void test() 

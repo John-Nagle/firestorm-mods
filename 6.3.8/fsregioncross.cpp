@@ -24,9 +24,10 @@
  * The Phoenix Firestorm Project, Inc., 1831 Oakwood Drive, Fairmont, Minnesota 56031-3225 USA
  * http://www.firestormviewer.org
  */
-
+#include "fsregioncrosstestdummies.h"
 #include "fsregioncross.h"
-#include "fsregioncrosstest.h"
+#include "llviewerobjectdummy.h"
+////#include "fsregioncrosstest.h"
 
 //
 //  Improved region crossing support.
