@@ -9,26 +9,41 @@ typedef double F64;
 typedef int U32;
 typedef bool BOOL;
 
-struct LLVector3 {                                                  // dummy
-    F32 mV[3];   
-};
-
-static const U32 LENGTHOFQUAT = 4;
 const int VX = 0;
 const int VY = 1;
 const int VZ = 2;
 const int VW = 3;
 const int VS = VW;  // huh?
 
+class LLVector3 {                                                  // dummy
+public:
+    F32 mV[3]; 
+    
+    LLVector3(F32 nx, F32 ny, F32 nz)
+    {   mV[VX] = nx; mV[VY] = ny; mV[VZ] = nz; }
+    
+    LLVector3() {}
+    
+      
+};
+
+static const U32 LENGTHOFQUAT = 4;
+
+
 class LLQuaternion
 {
 public:
 	F32 mQ[LENGTHOFQUAT];
+	
+	LLQuaternion(F32 nx, F32 ny, F32 nz, F32 nw)
+    {   mQ[VX] = nx; mQ[VY] = ny; mQ[VZ] = nz; mQ[VW] = nw;}
+    LLQuaternion() {}
     
     friend LLVector3 operator*(const LLVector3 &a, const LLQuaternion &rot);		// Rotates a by rot
     const LLQuaternion&	conjugate();		// transpose (same as conjugate) - in place
     const LLQuaternion&	set(const F32 *q);
     F32     normalize();
+    
 };
 inline const LLQuaternion& LLQuaternion::conjugate()        // in-place conjugate/transpose
 {
