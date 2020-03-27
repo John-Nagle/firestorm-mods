@@ -62,8 +62,8 @@ public:
 };
 
 
-class RegionCrossExtrapolateImpl ////:                              // Implementation of region cross extrapolation control
- ////   mPreviousUpdateTime(0.0)                                    // no previous time yet
+class RegionCrossExtrapolateImpl :                              // Implementation of region cross extrapolation control 
+    mPreviousUpdateTime(0.0)                                    // no previous time yet
 {
 private:
     const LLViewerObject& mOwner;                                   // ref to owning object
