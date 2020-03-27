@@ -38,7 +38,9 @@
 class LLViewerObject;                                               // forward declaration
 
 //
-//  LowPassFilter -- a simple Kalman low-pass filter
+//  LowPassFilter -- a simple Kalman low-pass filter.
+//
+//  Supports nonuniform time deltas between samples, since object update times are not consistent.
 //
 class LowPassFilter 
 {
@@ -46,11 +48,11 @@ private:
     LLVector3 mFiltered;                                            // filtered value
     F32 mFilterConstant;                                            // 0 to 1.0, weight of new values
 public:
-    void update(const LLVector3 val, F32 dt)
+    void update(const LLVector3 val, F32 dt)                        // add new value into filter
     {
         //  ***MORE***
     }
-    const LLVector3 get() const 
+    const LLVector3 get() const                                     // get filtered output
     {
         LLVector3 dummy;
         return(dummy);                                              // ***TEMP***
@@ -62,8 +64,7 @@ public:
 };
 
 
-class RegionCrossExtrapolateImpl :                              // Implementation of region cross extrapolation control 
-    mPreviousUpdateTime(0.0)                                    // no previous time yet
+class RegionCrossExtrapolateImpl                                    // Implementation of region cross extrapolation control 
 {
 private:
     const LLViewerObject& mOwner;                                   // ref to owning object
@@ -91,7 +92,7 @@ public:
     {
         return(1.0);                                                // ***TEMP***
     }  
-    
+  
 };
 
 //
