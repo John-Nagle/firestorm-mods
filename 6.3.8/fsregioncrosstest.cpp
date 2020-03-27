@@ -15,6 +15,17 @@ namespace FrameTimer {
     }
 };
 
+//  
+//  Dummy LLViewerObject
+//
+
+//  Parse data line from logging info
+void LLViewerObject::parseline(const std::string& s)
+{
+}
+
+
+
 
 
 
