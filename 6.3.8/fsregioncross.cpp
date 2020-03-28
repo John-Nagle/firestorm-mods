@@ -29,7 +29,7 @@
 #include "llviewerobjectdummy.h"
 
 //
-//  Improved region crossing support.
+//  Improved region crossing prediction.
 //
 //
 //  update -- called for each object update message to "vehicle" objects.
@@ -71,9 +71,33 @@ void RegionCrossExtrapolateImpl::update()
 //
 //  Potential vehicle.
 //
-BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)                          // true if root object and being sat on
+BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)  // true if root object and being sat on
 {   
     return(true);                                               // ***TEMP***
 }
+
+//
+//  LowPassFilter  -- the low pass filter for smoothing velocities.
+//
+//  Works on vectors.
+//
+//  Filter function is:
+//
+//  integrate(dt,0,filterval, 1.0/((1+filterval)^dt))
+//
+void LowPassFilter::update(const LLVector3& val, F32 dt)        // add new value into filter
+{
+    if (!mInitialized)                                          // if not initialized yet
+    {   mFiltered = val;                                        // just use new value
+        mInitialized = true;
+        return;
+    }
+    //  ***MORE***
+}
+//
+//  Control singleton
+//
+RegionCrossExtrapolateControl gRegionCrossExtrapolateControl;
+
 
 

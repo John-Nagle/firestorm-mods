@@ -38,28 +38,59 @@
 class LLViewerObject;                                               // forward declaration
 
 //
+//  RegionCrossExtrapolateControl -- configuration control for region cross predictor
+//
+//  This is a singleton, or a "monad", if you prefer.
+//
+class RegionCrossExtrapolateControl {
+public:
+    F32 mVelFilterConstant;                         // filter constant for velocity
+    F32 mAngVelFilterConstant;                      // filter constant for angle
+    friend class LowPassFilter;                     // low pass filter can look at these
+public:
+    RegionCrossExtrapolateControl() :               // constructor
+    mVelFilterConstant(0.0),
+    mAngVelFilterConstant(0.0)
+    {}
+
+    //  Set filter constants.
+    //  0 = no filtering
+    //  Larger values mean a longer accumulation time for filtering, i.e. lower pass.
+    //  Unit is seconds.
+    void setfilterconstants(F32 velfilter, F32 angvelfilter)
+    {
+        mVelFilterConstant = velfilter;
+        mAngVelFilterConstant = angvelfilter;
+    }
+};
+
+extern RegionCrossExtrapolateControl gRegionCrossExtrapolateControl;            // declare singleton
+
+//
 //  LowPassFilter -- a simple Kalman low-pass filter.
 //
 //  Supports nonuniform time deltas between samples, since object update times are not consistent.
 //
-class LowPassFilter 
+class LowPassFilter
 {
 private:
     LLVector3 mFiltered;                                            // filtered value
-    F32 mFilterConstant;                                            // 0 to 1.0, weight of new values
+    BOOL mInitialized;                                              // true if initialized
 public:
-    void update(const LLVector3 val, F32 dt)                        // add new value into filter
+    LowPassFilter() :                                               // constructor
+    mInitialized(false),
+    mFiltered(0.0,0.0,0.0)
+    {}
+    void update(const LLVector3& val, F32 dt);                      // add new value into filter
+    
+    const LLVector3& get() const                                    // get filtered output
     {
-        //  ***MORE***
-    }
-    const LLVector3 get() const                                     // get filtered output
-    {
-        LLVector3 dummy;
-        return(dummy);                                              // ***TEMP***
+        return(mFiltered);                                          // already stored
     }
     
     void clear() 
     {
+        mInitialized = false;                                       // not initialized yet
     }
 };
 
