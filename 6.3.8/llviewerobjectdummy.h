@@ -3,9 +3,9 @@
 #include <string>
 class LLViewerObject                                                // dummy for testing
 {
-private:
+public:
     //  Dummy data from log file
-    LLVector3 mTime;
+    F64 mTime;
     LLVector3 mPos;
     LLQuaternion mRot;
     LLVector3 mVel;

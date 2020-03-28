@@ -57,6 +57,21 @@ void test1()
 }
 
 //
+//  dotestline -- do a test line
+//
+void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVector3 v, LLVector3 av, const char* region)
+{
+    r.normalize();                                                  // normalize quaternion
+    vo.mTime = t;
+    vo.mPos = p;
+    vo.mRot = r;
+    vo.mVel = v;
+    vo.mAngVel = av;
+    vo.mExtrap.update(vo);                                         // do the update
+    F32 lim = vo.mExtrap.getextraptimelimit();                    // get current time limit
+    printf("Limit: %3.2f\n", lim);                                  // print limit 
+}
+//
 //  dofile -- read file of test data.
 //
 //  Test data format is lines of the form:
@@ -72,6 +87,7 @@ void test1()
 //
 void dofile(const char* filename, bool verbose)
 {
+    LLViewerObject vo;                          // dummy viewer object
     std::cout << "Data from " << filename << std::endl;
     std::ifstream infile(filename);          // open input file
     std::string line;
@@ -80,12 +96,12 @@ void dofile(const char* filename, bool verbose)
         if (verbose)
         {   std::cout << line << std::endl; }   // list input
         if (line.length() == 0 || line[0] == '#') continue; // line to ignore
-        //  Parseable line.
+        //  Parseable line. Extract fields.
         int expectedcnt = 15;
         float t;
         LLVector3 p,v,av;
         LLQuaternion r;
-        char region[60];
+        char region[61];
         int cnt = sscanf(line.c_str(), "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%60s", 
             &t, 
             &p.mV[VX], &p.mV[VY], &p.mV[VZ],
@@ -97,6 +113,10 @@ void dofile(const char* filename, bool verbose)
         {   std::cerr << line << std::endl << "Expected " << expectedcnt << " values, received " << cnt << std::endl;
             exit(1);
         }
+        //
+        //  Do test line
+        //
+        dotestline(vo, t, p, r, v, av, region);             // do a test line
 
     }
 }
