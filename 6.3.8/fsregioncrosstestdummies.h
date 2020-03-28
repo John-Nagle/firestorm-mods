@@ -4,6 +4,8 @@
 //
 //  Dummy types normally defined within Firestorm
 //
+//  For unit test only.
+//
 typedef float F32;
 typedef double F64;
 typedef int U32;
@@ -23,6 +25,11 @@ public:
     {   mV[VX] = nx; mV[VY] = ny; mV[VZ] = nz; }
     
     LLVector3() {}
+    LLVector3 operator*(F32 a) const
+    {   return(LLVector3(mV[0]*a, mV[1]*a, mV[2]*a)); }   
+    
+    LLVector3 operator+(const LLVector3 a) const
+    {   return(LLVector3(mV[0]+a.mV[0], mV[1]*a.mV[1], mV[2]*a.mV[2])); }            
     
       
 };

@@ -44,23 +44,25 @@ class LLViewerObject;                                               // forward d
 //
 class RegionCrossExtrapolateControl {
 public:
-    F32 mVelFilterConstant;                         // filter constant for velocity
-    F32 mAngVelFilterConstant;                      // filter constant for angle
+    F32 mFilterTime;                                // (secs) decay time of filter
+    F32 mVelError;                                  // (m/sec) error limit for velocity
+    F32 mAngVelError;                               // (rad/sec) error limit for angle
     friend class LowPassFilter;                     // low pass filter can look at these
 public:
     RegionCrossExtrapolateControl() :               // constructor
-    mVelFilterConstant(0.0),
-    mAngVelFilterConstant(0.0)
+    mFilterTime(0.0),
+    mVelError(0.0),
+    mAngVelError(0.0)
     {}
 
     //  Set filter constants.
     //  0 = no filtering
     //  Larger values mean a longer accumulation time for filtering, i.e. lower pass.
-    //  Unit is seconds.
-    void setfilterconstants(F32 velfilter, F32 angvelfilter)
-    {
-        mVelFilterConstant = velfilter;
-        mAngVelFilterConstant = angvelfilter;
+    //  Units are secs, m/sec, radians/sec
+    void setfilterconstants(F32 filtertime, F32 vellimit, F32 angvellimit)
+    {   mFilterTime = filtertime;
+        mVelError = vellimit;
+        mAngVelError = angvellimit;
     }
 };
 

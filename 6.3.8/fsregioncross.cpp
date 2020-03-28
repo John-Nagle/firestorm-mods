@@ -81,18 +81,20 @@ BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)  // true if root 
 //
 //  Works on vectors.
 //
-//  Filter function is:
+//  Filter function is scaled by 1- 1/((1+(1/filterval))^t)
+//  This is so samples which represent more time are weighted more.
 //
-//  integrate(dt,0,filterval, 1.0/((1+filterval)^dt))
-//
-void LowPassFilter::update(const LLVector3& val, F32 dt)        // add new value into filter
+void LowPassFilter::update(const LLVector3& val, F32 secs)      // add new value into filter
 {
     if (!mInitialized)                                          // if not initialized yet
     {   mFiltered = val;                                        // just use new value
         mInitialized = true;
         return;
     }
-    //  ***MORE***
+    F32 filtermult = 1.0;                                       // no filtering if zero filter time
+    if (gRegionCrossExtrapolateControl.mFilterTime > 0.001)     // avoid divide by zero
+    {   filtermult = 1.0 - 1.0/pow(1.0+1.0/gRegionCrossExtrapolateControl.mFilterTime,secs);  }        // filter scale factor
+    mFiltered = val * filtermult + mFiltered*(1.0-filtermult);  // low pass filter
 }
 //
 //  Control singleton
