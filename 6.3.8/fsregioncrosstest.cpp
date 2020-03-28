@@ -1,6 +1,8 @@
 //
 //  Unit test for fsregioncross.h
 //
+#include <iostream>
+#include <fstream>
 #include "fsregioncrosstestdummies.h"
 ////#include "fsregioncrosstest.h"
 
@@ -44,13 +46,7 @@ LLVector3		operator*(const LLVector3 &a, const LLQuaternion &rot)
     return LLVector3(nx, ny, nz);
 }
 
-
-
-
-
-
-
-void test() 
+void test1() 
 {
     LLViewerObject* obj = new LLViewerObject();                     // new viewer object
     obj->mExtrap.changedlink(*obj);                                 // do a link change
@@ -60,7 +56,66 @@ void test()
     delete(obj);                                                    // release object            
 }
 
+//
+//  dofile -- read file of test data.
+//
+//  Test data format is lines of the form:
+//
+//  t,px,py,pz,rx,ry,rz,rw,vx,vy,vz,avx,avy,avz,r
+//
+//  t: time
+//  p: position
+//  r: rotation (quaternion)
+//  v: velocity
+//  av: angular velocity
+//  r: region name
+//
+void dofile(const char* filename, bool verbose)
+{
+    std::cout << "Data from " << filename << std::endl;
+    std::ifstream infile(filename);          // open input file
+    std::string line;
+    while(!infile.eof())
+    {   std::getline(infile,line);
+        if (verbose)
+        {   std::cout << line << std::endl; }   // list input
+        if (line.length() == 0 || line[0] == '#') continue; // line to ignore
+        //  Parseable line.
+        int expectedcnt = 15;
+        float t;
+        LLVector3 p,v,av;
+        LLQuaternion r;
+        char region[60];
+        int cnt = sscanf(line.c_str(), "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%60s", 
+            &t, 
+            &p.mV[VX], &p.mV[VY], &p.mV[VZ],
+            &r.mQ[VX], &r.mQ[VY], &r.mQ[VZ], &r.mQ[VW],
+            &v.mV[VX], &v.mV[VY], &v.mV[VZ],
+            &av.mV[VX], &av.mV[VY], &av.mV[VZ],
+            region);
+        if (cnt != expectedcnt) 
+        {   std::cerr << line << std::endl << "Expected " << expectedcnt << " values, received " << cnt << std::endl;
+            exit(1);
+        }
+
+    }
+}
+
 int main(int argc, char** argv)
 {
-    test();
+    bool verbose = false;
+    if (argc < 2)                                                   // if no args, do basic test
+    {   test1(); return(0); }
+    //  Parse args, process files
+    for (int i=1; i<argc; i++)
+    {   char* arg = argv[i];                                        // nth arg
+        if (arg[0] == '-')                                          // if option
+        {   switch (arg[1])
+            {   case 'v':   verbose = true; break;                  // -v
+                default: std::cerr << "Unknown option: " << arg << std::endl; return(1); 
+            }
+        } else {
+            dofile(arg, verbose);                                   // do indicated file
+        }
+    }
 }
