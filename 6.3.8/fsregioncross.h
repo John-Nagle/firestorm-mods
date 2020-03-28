@@ -63,7 +63,16 @@ public:
     }
 };
 
-
+//
+//  RegionCrossExtrapolateImpl -- the extrapolation limit calculator.
+//
+//  One of these is created when an object is sat upon. If the
+//  seat moves, it's effectively a vehicle, so we start calculating
+//  region crossing safe extrapolation times.  If the seat never moves,
+//  we still allocate one of these, but it doesn't do anything.
+//  When the avatar stands, this object is released. 
+//  If the LLViewerObject is deleted, so is this object.
+//
 class RegionCrossExtrapolateImpl                                    // Implementation of region cross extrapolation control 
 {
 private:
@@ -71,14 +80,15 @@ private:
     F64 mPreviousUpdateTime;                                        // previous update time
     LowPassFilter mFilteredVel;                                     // filtered velocity
     LowPassFilter mFilteredAngVel;                                  // filtered angular velocity
+    BOOL mMoved;                                                    // seen to move at least once
 
 public:
     RegionCrossExtrapolateImpl(const LLViewerObject& vo) :          // constructor
     mOwner(vo),                                                     // back ref to owner
-    mPreviousUpdateTime(0)                                          // time of last update
+    mPreviousUpdateTime(0),                                         // time of last update
+    mMoved(false)                                                   // has not moved yet
     {
-        printf("RegionCrossExtrapolateImpl initialized.\n");        // ***TEMP***
-        
+        printf("RegionCrossExtrapolateImpl initialized.\n");        // ***TEMP***        
     }
     
     ~RegionCrossExtrapolateImpl()                                   // destructor
@@ -109,10 +119,7 @@ private:
     std::unique_ptr<RegionCrossExtrapolateImpl> mImpl;              // pointer to region cross extrapolator, if present
     
 protected:
-    BOOL isvehicle(const LLViewerObject& vo)                        // true if vehicle
-    {   
-        return(true);                                               // ***TEMP***
-    }
+    BOOL ifsaton(const LLViewerObject& vo);                         // true if root object and being sat on
     
 public:
     void update(const LLViewerObject& vo)                           // new object update message received
@@ -121,7 +128,7 @@ public:
     
     void changedlink(const LLViewerObject& vo)                      // parent or child changed, check if extrapolation object needed
     {
-        if (isvehicle(vo))                                          // if this object is now the root of a vehicle with an avatar
+        if (ifsaton(vo))                                            // if this object is now the root of a linkset with an avatar
         {   if (!mImpl.get())                                       // if no extrapolation implementor
             {   mImpl.reset(new RegionCrossExtrapolateImpl(vo)); }  // add an extrapolator       
         } else {                                                    // not a vehicle

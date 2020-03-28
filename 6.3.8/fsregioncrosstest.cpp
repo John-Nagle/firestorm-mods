@@ -88,6 +88,7 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
 void dofile(const char* filename, bool verbose)
 {
     LLViewerObject vo;                          // dummy viewer object
+    vo.mExtrap.changedlink(vo);                 // do a link change
     std::cout << "Data from " << filename << std::endl;
     std::ifstream infile(filename);          // open input file
     std::string line;
