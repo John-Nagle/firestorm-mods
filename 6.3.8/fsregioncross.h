@@ -43,10 +43,11 @@ class LLViewerObject;                                               // forward d
 //  This is a singleton, or a "monad", if you prefer.
 //
 class RegionCrossExtrapolateControl {
-public:
+private:
     F32 mFilterTime;                                // (secs) decay time of filter
     F32 mVelError;                                  // (m/sec) error limit for velocity
     F32 mAngVelError;                               // (rad/sec) error limit for angle
+    friend class RegionCrossExtrapolateImpl;        // extrapolator can look at these
     friend class LowPassFilter;                     // low pass filter can look at these
 public:
     RegionCrossExtrapolateControl() :               // constructor
@@ -55,10 +56,10 @@ public:
     mAngVelError(std::numeric_limits<F32>::infinity())
     {}
 
-    //  Set filter constants.
-    //  0 = no filtering
+    //  Set extrapolation parameters.
+    //  filtertime = 0 means no filtering. limiting will not be applied.
     //  Larger values mean a longer accumulation time for filtering, i.e. lower pass.
-    //  Units are secs, m/sec, radians/sec
+    //  Units are secs, meters, radians
     void setfilterconstants(F32 filtertime, F32 vellimit, F32 angvellimit)
     {   mFilterTime = filtertime;
         mVelError = vellimit;
