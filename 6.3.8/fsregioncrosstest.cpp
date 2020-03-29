@@ -22,11 +22,6 @@ namespace FrameTimer {
 //  Dummy LLViewerObject
 //
 
-//  Parse data line from logging info
-void LLViewerObject::parseline(const std::string& s)
-{
-}
-
 //
 //  Dummy quaternion math
 //
@@ -76,14 +71,14 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
 //
 //  Test data format is lines of the form:
 //
-//  t,px,py,pz,rx,ry,rz,rw,vx,vy,vz,avx,avy,avz,r
+//  t,px,py,pz,rx,ry,rz,rw,vx,vy,vz,avx,avy,avz,rg
 //
 //  t: time
 //  p: position
 //  r: rotation (quaternion)
 //  v: velocity
 //  av: angular velocity
-//  r: region name
+//  rg: region name
 //
 void dofile(const char* filename, bool verbose)
 {

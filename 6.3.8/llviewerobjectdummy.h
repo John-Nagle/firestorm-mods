@@ -17,8 +17,6 @@ public:
     const LLVector3& getPositionRegion() const { return(mPos); }
     const LLQuaternion getRotationRegion() const { return(mRot); }
     const LLVector3 getAngularVelocity() const { return(mAngVel); }
-    
-    void parseline(const std::string& s);                       // get data from line of test string
 };
 
 #endif // LLVIEWEROBJECT_H
