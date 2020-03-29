@@ -136,6 +136,8 @@ int main(int argc, char** argv)
                 default: std::cerr << "Unknown option: " << arg << std::endl; return(1); 
             }
         } else {
+            const float DEG_TO_RADIANS = M_PI / 180;
+            void gRegionCrossExtrapolateControl::setfilterconstants(2.0, 1.0, 20.0*DEG_TO_RADIANS)
             dofile(arg, verbose);                                   // do indicated file
         }
     }
