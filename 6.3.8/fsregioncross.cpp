@@ -73,18 +73,26 @@ void RegionCrossExtrapolateImpl::update()
 //  Returns infinity for a divide by near zero.
 //
 static inline F32 dividesafe(F32 num, F32 denom)
-{   return(denom > FP_MAG_THRESHOLD                             // avoid divide by zero
-        || denom < -FP_MAG_THRESHOLD        
-        ? num / denom
+{   ////printf("num: %3.6f  denom: %3.6f  Threshold: %3.10f\n", num, denom, FP_MAG_THRESHOLD); // ***TEMP***
+    return((denom > FP_MAG_THRESHOLD                             // avoid divide by zero
+         || denom < -FP_MAG_THRESHOLD)        
+        ? (num / denom)
         : std::numeric_limits<F32>::infinity());                // return infinity if zero divide
 }
 //
-//  getextraptimelimit -- don't extrapolate further ahead than this during a region crossing
+//  getextraptimelimit -- don't extrapolate further ahead than this during a region crossing.
+//
+//  Returns seconds of extrapolation that will probably stay within set limits of error.
 //
 F32 RegionCrossExtrapolateImpl::getextraptimelimit() const 
 {
     //  Time limit is max allowed error / error. Returns worst case (largest) of vel and angular vel limits.
-    return(std::max(
+    printf("velerr: %4.3f  allowed: %4.3f   angvelerr: %4.3f  allowed: %4.3f\n",               // ***TEMP***
+        (mOwner.getVelocity() - mFilteredVel.get()).length(),
+        gRegionCrossExtrapolateControl.mVelError,
+        (mOwner.getAngularVelocity() - mFilteredAngVel.get()).length(),
+        gRegionCrossExtrapolateControl.mAngVelError);
+    return(std::min(
         dividesafe(gRegionCrossExtrapolateControl.mVelError,
             ((mOwner.getVelocity() - mFilteredVel.get()).length())),
         dividesafe(gRegionCrossExtrapolateControl.mAngVelError,

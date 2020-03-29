@@ -4,7 +4,7 @@
 //
 //  Dummy types normally defined within Firestorm/LL code
 //
-//  For unit test only.
+//  For unit test only. Not needed inside viewer.
 //
 typedef float F32;
 typedef double F64;

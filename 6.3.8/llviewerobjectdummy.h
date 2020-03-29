@@ -1,6 +1,11 @@
 #ifndef LLVIEWEROBJECTDUMMY_H
 #define LLVIEWEROBJECTDUMMY_H
 #include <string>
+//
+//  Dummy types normally defined within Firestorm/LL code
+//
+//  For unit test only. Not needed inside viewer.
+//
 class LLViewerObject                                                // dummy for testing
 {
 public:
