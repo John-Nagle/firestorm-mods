@@ -64,7 +64,7 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
     FrameTimer::mFrameTimer = t;
     vo.mExtrap.update(vo);                                          // do the update
     F32 lim = vo.mExtrap.getextraptimelimit();                      // get current time limit
-    printf("Limit: %3.2f\n", lim);                                  // print limit 
+    printf("Extrapolation limit: %3.2f secs.\n", lim);              // print limit 
 }
 //
 //  dofile -- read file of test data.
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
             }
         } else {
             const float DEG_TO_RADIANS = M_PI / 180;
-            gRegionCrossExtrapolateControl.setfilterconstants(2.0, 1.0, 20.0*DEG_TO_RADIANS);
+            gRegionCrossExtrapolateControl.setfilterconstants(5.0, 1.0, 20.0*DEG_TO_RADIANS);
             dofile(arg, verbose);                                   // do indicated file
         }
     }
