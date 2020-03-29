@@ -24,9 +24,10 @@
  * The Phoenix Firestorm Project, Inc., 1831 Oakwood Drive, Fairmont, Minnesota 56031-3225 USA
  * http://www.firestormviewer.org
  */
-#include "fsregioncrosstestdummies.h"
+ 
+#include "fsregioncrosstestdummies.h"                           // ***TEMP***
 #include "fsregioncross.h"
-#include "llviewerobjectdummy.h"
+#include "llviewerobjectdummy.h"                                // ***TEMP***
 
 //
 //  Improved region crossing prediction.
@@ -58,13 +59,33 @@ void RegionCrossExtrapolateImpl::update()
     mPreviousUpdateTime = now;
     LLQuaternion rot = mOwner.getRotationRegion();              // transform in global coords
     const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
-    vel = vel * inverserot;                                     // velocity in object coords
-    mFilteredVel.update(vel,dt);                                // accum into filter
     LLVector3 angvel = mOwner.getAngularVelocity();             // angular velocity in world coords
-    angvel = angvel * inverserot;                               // angular velocity in object coords
-    mFilteredAngVel.update(angvel, dt);                         // accum into filter
-        
+    mFilteredVel.update(vel*inverserot,dt);                     // accum into filter in object coords
+    mFilteredAngVel.update(angvel*inverserot,dt);               // accum into filter  
 }
+//
+//  dividesafe -- floating divide with divide by zero check
+//
+//  Returns infinity for a divide by near zero.
+//
+static inline F32 dividesafe(F32 num, F32 denom)
+{   return(denom > FP_MAG_THRESHOLD                             // avoid divide by zero
+        || denom < -FP_MAG_THRESHOLD        
+        ? num / denom
+        : std::numeric_limits<F32>::infinity());                // return infinity if zero divide
+}
+//
+//  getextraptimelimit -- don't extrapolate further ahead than this during a region crossing
+//
+F32 RegionCrossExtrapolateImpl::getextraptimelimit() const 
+{
+    //  Time limit is max allowed error / error. Returns worst case (largest) of vel and angular vel limits.
+    return(std::max(
+        dividesafe(gRegionCrossExtrapolateControl.mVelError,
+            ((mOwner.getVelocity() - mFilteredVel.get()).length())),
+        dividesafe(gRegionCrossExtrapolateControl.mAngVelError,
+            ((mOwner.getAngularVelocity () - mFilteredAngVel.get()).length()))));
+}  
 
 //
 //  ifsaton -- True if object is being sat upon.

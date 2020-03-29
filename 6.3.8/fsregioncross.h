@@ -50,9 +50,9 @@ public:
     friend class LowPassFilter;                     // low pass filter can look at these
 public:
     RegionCrossExtrapolateControl() :               // constructor
-    mFilterTime(0.0),
-    mVelError(0.0),
-    mAngVelError(0.0)
+    mFilterTime(0.0),                               // no filtering by default
+    mVelError(std::numeric_limits<F32>::infinity()),// no limits on error
+    mAngVelError(std::numeric_limits<F32>::infinity())
     {}
 
     //  Set filter constants.
@@ -131,11 +131,7 @@ public:
 
     void update();                                                  // update on object update message
   
-    F32 getextraptimelimit() const 
-    {
-        return(1.0);                                                // ***TEMP***
-    }  
-  
+    F32 getextraptimelimit() const;                                 // don't extrapolate more than this
 };
 
 //

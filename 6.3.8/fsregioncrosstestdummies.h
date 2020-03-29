@@ -2,7 +2,7 @@
 #define FSREGIONCROSSDUMMIES_H
 #include <math.h>
 //
-//  Dummy types normally defined within Firestorm
+//  Dummy types normally defined within Firestorm/LL code
 //
 //  For unit test only.
 //
@@ -17,7 +17,7 @@ const int VZ = 2;
 const int VW = 3;
 const int VS = VW;  // huh?
 
-class LLVector3 {                                                  // dummy
+class LLVector3 {                                                  // dummy of LL vector type
 public:
     F32 mV[3]; 
     
@@ -26,18 +26,27 @@ public:
     
     LLVector3() {}
     LLVector3 operator*(F32 a) const
-    {   return(LLVector3(mV[0]*a, mV[1]*a, mV[2]*a)); }   
+    {   return(LLVector3(mV[VX]*a, mV[VY]*a, mV[VZ]*a)); }   
     
     LLVector3 operator+(const LLVector3 a) const
-    {   return(LLVector3(mV[0]+a.mV[0], mV[1]*a.mV[1], mV[2]*a.mV[2])); }            
+    {   return(LLVector3(mV[VX]+a.mV[VX], mV[VY]+a.mV[VY], mV[VZ]+a.mV[VZ])); }  
     
-      
+    LLVector3 operator-(const LLVector3 a) const
+    {   return(LLVector3(mV[VX]-a.mV[VX], mV[VY]-a.mV[VY], mV[VZ]-a.mV[VZ])); }
+    
+    F32		length() const;			// Returns magnitude of LLVector3               
 };
+
+inline F32 LLVector3::length() const			// Returns magnitude of LLVector3
+{
+    return(sqrt(
+        mV[VX]*mV[VX] + mV[VY]*mV[VY] + mV[VZ]*mV[VZ]));
+}
 
 static const U32 LENGTHOFQUAT = 4;
 
 
-class LLQuaternion
+class LLQuaternion                                                  // dummy of LL quaternion type
 {
 public:
 	F32 mQ[LENGTHOFQUAT];
@@ -70,9 +79,16 @@ inline const LLQuaternion&	LLQuaternion::set(const F32 *q)
 	return (*this);
 }
 
+
+
+
 const F32 FP_MAG_THRESHOLD = 0.0000001f;
 const F32 ONE_PART_IN_A_MILLION = 0.000001f;
 
+
+
+
+//  Normalize, from Firestorm.
 inline F32	LLQuaternion::normalize()
 {
 	F32 mag = sqrtf(mQ[VX]*mQ[VX] + mQ[VY]*mQ[VY] + mQ[VZ]*mQ[VZ] + mQ[VS]*mQ[VS]);
