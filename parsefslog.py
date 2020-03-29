@@ -92,9 +92,9 @@ class Logread :
 
     UPDATEMSGVECTORRE = re.compile(r"\s*([\w .]+):\s*{([\d\s., -]+[} ])\s*$") # name: {vector} 
 
-    VECTORRE = re.compile(r"\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*")    # float, float, float
+    VECTORRE = re.compile(r"\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*$")    # float, float, float
     
-    QUATERNIONRE = re.compile(r"\s*([\d.-]+)\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*")    # float, float, float, float
+    QUATERNIONRE = re.compile(r"\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*$")    # float, float, float, float
     
     def __init__(self, verbose, filterconstant) :
         self.verbose = verbose                                              # more print output
@@ -128,15 +128,19 @@ class Logread :
                 vectorfields = [Logread.UPDATEMSGVECTORRE.match(g) for g in vectorexprs if g] # extract name/value vector pairs
                 for field in vectorfields :
                     ####print("Vector: %s" % (field.groups(0),))
-                    vectoritem = Logread.VECTORRE.match(field.group(2))            # extract 3 numbers
-                    if vectoritem :
-                        ####print("Vector data: %s = (%s,%s,%s)" % (field.group(1),vectoritem.group(1),vectoritem.group(2),vectoritem.group(3)))
-                        outputfields[field.group(1)] = numpy.array([float(vectoritem.group(1)), float(vectoritem.group(2)), float(vectoritem.group(3))])
-                    else :
-                        quatitem = Logread.QUATERNIONRE.match(field.group(2))       # extract 4 numbers
-                        if quatitem :
-                            outputfields[field.group(1)] = numpy.array([float(vectoritem.group(1)), float(vectoritem.group(2)), float(vectoritem.group(3)), 
-                                float(vectoritem.group(2))])
+                    quatitem = Logread.QUATERNIONRE.match(field.group(2))       # extract 4 numbers
+                    if quatitem :
+                        outputfields[field.group(1)] = numpy.array([float(quatitem.group(1)), float(quatitem.group(2)), float(quatitem.group(3)), 
+                                float(quatitem.group(4))])
+                    else:
+                        vectoritem = Logread.VECTORRE.match(field.group(2))            # extract 3 numbers
+                        if vectoritem :
+                            ####print("Vector data: %s = (%s,%s,%s)" % (field.group(1),vectoritem.group(1),vectoritem.group(2),vectoritem.group(3)))
+                            outputfields[field.group(1)] = numpy.array([float(vectoritem.group(1)), float(vectoritem.group(2)), float(vectoritem.group(3))])
+                        else :
+                            print("Failed to parse vector/quaternion: " + field.group(2))
+                            raise RuntimeError("Invalid input")
+                    
                             
                 ####print("Vector fields: %s" % (vectorfields))           
                 return outputfields
@@ -279,15 +283,32 @@ class Logread :
             r0 = r1
             newitems.append(newitem)
         return newitems
+        
+    def vectostring(self,vec) :
+        '''
+        Vector to comma-separated formatted string
+        '''
+        s = "  "
+        for val in vec :
+            s += " %9.4f," % (val,)
+        return s
                 
     def writecsv1(self, filename) :
         '''
         Write CSV file of raw Z values
         '''
         with open(filename,"w") as wf :
+            print("#  T            Position                    Rotation                    Velocity          Ang. Vel  Region",file=wf)      # file header
             for item in self.items :
+                print(item); # ***TEMP***
                 t = item['timestamp']
-                s = "%6.3f,%6.3f,%6.3f,%6.3f,%6.3f, %s" % (t-self.starttime,item['Velocity'][2],item['velerr'],item['angvelerr'],item['projectmax'],item['region'])
+                ####s = "%6.3f,%6.3f,%6.3f,%6.3f,%6.3f, %s" % (t-self.starttime,item['Velocity'][2],item['velerr'],item['angvelerr'],item['projectmax'],item['region'])
+                s = "%7.3f,    " % (t-self.starttime)
+                s += self.vectostring(item['Position'])
+                s += self.vectostring(item['Rotation'])
+                s += self.vectostring(item['Velocity'])
+                s += self.vectostring(item['Ang. Vel'])
+                s += item['region']
                 print(s,file=wf)
     
 def unittest(s) :
