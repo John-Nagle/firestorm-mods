@@ -2463,7 +2463,7 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 		    " type: " << update_type << " compressed: " << (dp != 0) << " update type: " << update_type << 
 		    " Parent: " << parentuuid << " Parent in msg: " << (msg_parent_uuid.isNull() ? "(none)" : msg_parent_uuid.asString()) << 		    
 		    " Parenting change: " << b_changed_status << 
-		    " Region: " << getRegion()->getName() << " PositionAgent: " << getPositionAgent() <<
+		    " Region: " << getRegion()->getName() << " Position: " << getPositionRegion() << " Rotation: " << getRotationRegion() <<
 		    " Velocity: " << getVelocity() << " Ang. Vel: " << getAngularVelocity() << " Accel: " << getAcceleration() << LL_ENDL; // JN 
 	    } else if (getID() == sDebugPrintThisUUID)                                  // if this is an update of the avatar's parent vehicle/sit object
 	    {   char ip_string[256] = "?";                                              // oversize, but safe
@@ -2473,7 +2473,7 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 	        " type: " << update_type << " compressed: " << (dp != 0) << " update type: " << update_type << 
 		    " Vehicle UUID: " << getID().asString() << 
 		    " Parenting change: " << b_changed_status << 
-		    " Region: " << getRegion()->getName() << " PositionAgent: " << getPositionAgent() <<
+		    " Region: " << getRegion()->getName() << " Position: " << getPositionRegion() << " Rotation: " << getRotationRegion() <<
 		    " Velocity: " << getVelocity() << " Ang. Vel: " << getAngularVelocity() << " Accel: " << getAcceleration() << LL_ENDL; // JN 
 	    }
 #endif // DEBUG_REGION_CROSS		

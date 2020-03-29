@@ -126,6 +126,7 @@ void LowPassFilter::update(const LLVector3& val, F32 secs)      // add new value
     F32 filtermult = 1.0;                                       // no filtering if zero filter time
     if (gRegionCrossExtrapolateControl.mFilterTime > 0.001)     // avoid divide by zero
     {   filtermult = 1.0 - 1.0/pow(1.0+1.0/gRegionCrossExtrapolateControl.mFilterTime,secs);  }        // filter scale factor
+    printf("Filter mult: %6.3f\n",filtermult);                  // ***TEMP***
     mFiltered = val * filtermult + mFiltered*(1.0-filtermult);  // low pass filter
 }
 //

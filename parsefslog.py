@@ -16,6 +16,9 @@ import ntpath
 SAMPLELINE = '''
 2020-03-17T21:20:22Z INFO # newview/llviewerobject.cpp(2471) processUpdateMessage : Vehicle/seat update msg from 216.82.49.146 type: 1 compressed: 1 update type: 1 Vehicle UUID: fdb6774e-0eac-4947-fc52-262960648d5f Parenting change: 0 Region: Vine PositionAgent: { -1.067578, 150.288254, 109.260979 } Velocity: { -13.595909, 6.591904, -0.162109 } Ang. Vel: { 0.192383, -0.405281, -0.010742 } Accel: { -0.344730, 0.403328, -5.628017 }
 '''
+SAMPLELINE = '''
+2020-03-29T18:20:27Z INFO # newview/llviewerobject.cpp(2471) processUpdateMessage : Vehicle/seat update msg from 216.82.51.209 type: 1 compressed: 1 update type: 1 Vehicle UUID: 18b0043f-1a90-f4c6-5b2c-24d15eba8cef Parenting change: 0 Region: Burns Position: { 113.457893, 79.910339, 70.149063 } Rotation: { 0.001532, -0.001669, -0.741905, 0.670501 } Velocity: { 0.000000, 0.000000, -0.115234 } Ang. Vel: { -0.053711, 0.063477, 0.000000 } Accel: { 0.000000, 0.000000, -1.715847 }
+'''
 
 MINPERIOD = 1/45.0                                                  # shortest possible sample interval, SL physics rate
 DEG_TO_RAD = math.pi / 180.0                                        # Degrees to radians conversion constant
@@ -85,11 +88,13 @@ class Logread :
     #   Regular expressions for parsing log lines
     UPDATEMSGRE = re.compile(r"(\d\d\d\d-\d\d-\d\d)T(\d\d\:\d\d:\d\d)Z\s*INFO\s*#\s*newview.*processUpdateMessage : (.*)\s+update msg from\s*([a-z0-9\.\-]+)\s(type: .*$)")
 
-    UPDATEMSGFIELDSRE = re.compile(r"type:\s+(\d+)\s+compressed:\s+(\d+)\s+update type:\s+(\d+)\s+Vehicle UUID:\s+(.+)\s+Parenting change:\s+(\d+)\s+Region:\s(.+)\s(PositionAgent.*)")
+    UPDATEMSGFIELDSRE = re.compile(r"type:\s+(\d+)\s+compressed:\s+(\d+)\s+update type:\s+(\d+)\s+Vehicle UUID:\s+(.+)\s+Parenting change:\s+(\d+)\s+Region:\s(.+)\s(Position:.*)")
 
     UPDATEMSGVECTORRE = re.compile(r"\s*([\w .]+):\s*{([\d\s., -]+[} ])\s*$") # name: {vector} 
 
     VECTORRE = re.compile(r"\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*")    # float, float, float
+    
+    QUATERNIONRE = re.compile(r"\s*([\d.-]+)\s*([\d.-]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)\s*")    # float, float, float, float
     
     def __init__(self, verbose, filterconstant) :
         self.verbose = verbose                                              # more print output
@@ -127,6 +132,12 @@ class Logread :
                     if vectoritem :
                         ####print("Vector data: %s = (%s,%s,%s)" % (field.group(1),vectoritem.group(1),vectoritem.group(2),vectoritem.group(3)))
                         outputfields[field.group(1)] = numpy.array([float(vectoritem.group(1)), float(vectoritem.group(2)), float(vectoritem.group(3))])
+                    else :
+                        quatitem = Logread.QUATERNIONRE.match(field.group(2))       # extract 4 numbers
+                        if quatitem :
+                            outputfields[field.group(1)] = numpy.array([float(vectoritem.group(1)), float(vectoritem.group(2)), float(vectoritem.group(3)), 
+                                float(vectoritem.group(2))])
+                            
                 ####print("Vector fields: %s" % (vectorfields))           
                 return outputfields
         return None                                                        # did not match
@@ -135,7 +146,8 @@ class Logread :
         try :
             item = self.parseline(line)                                    # parse if possible
             if item :                                                      # if got something
-                pos = item["PositionAgent"]
+                pos = item["Position"]
+                rot = item["Rotation"]
                 vel = item["Velocity"]
                 time = item["time"]
                 region = item["region"]
@@ -235,7 +247,7 @@ class Logread :
         projectmax = min(secslin, secsang)
         item['projectmax'] = projectmax
         t1 = item['timestamp']
-        pos = item['PositionAgent']
+        pos = item['Position']
         region = item['region']
         print("%6.2f %s %s %s %s %s %s %1.2f %1.2f %1.2f" % (t1-self.starttime, region, pos, vel, smoothedvel, 
             angvel, smoothedangvel, velerr, angvelerr, projectmax))
@@ -250,7 +262,7 @@ class Logread :
         t0 = items[0]['timestamp']
         r0 = items[0]['region']
         self.starttime = t0
-        p0 = items[0]['PositionAgent']
+        p0 = items[0]['Position']
         items[0]['velerr'] = 0.0                    # no error at start
         items[0]['angvelerr'] = 0.0
         items[0]['projectmax'] = math.inf
@@ -258,7 +270,7 @@ class Logread :
         for item in items[1:] :
             ####print(item)
             t1 = item['timestamp']
-            p1 = item['PositionAgent']
+            p1 = item['Position']
             r1 = item['region']
             dt = t1 - t0                            # time delta
             newitem = self.analyzeitem(item, dt, r0 != r1)   
