@@ -333,7 +333,7 @@ def main() :
     for filename in args.logfile :                                      # for filenames given
         lr = Logread(args.verbose, filterconstant)
         lr.dologfile(filename)                                          # do the log file
-        outfilename = ntpath.basename(filename) + "z.csv"               # Z values CSV file
+        outfilename = ntpath.basename(filename) + ".csv"                # Pos, rot, vel, etc. CSV file
         lr.writecsv1(outfilename)                                       # write CSV file
     
 main()
