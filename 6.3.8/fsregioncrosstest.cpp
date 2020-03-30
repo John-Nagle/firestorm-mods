@@ -86,6 +86,10 @@ void dofile(const char* filename, bool verbose)
     vo.mExtrap.changedlink(vo);                 // do a link change
     std::cout << "Data from " << filename << std::endl;
     std::ifstream infile(filename);          // open input file
+    if (!infile.is_open())
+    {   std::cout << "Unable to open " << filename << std::endl; 
+        return;
+    }
     std::string line;
     while(!infile.eof())
     {   std::getline(infile,line);
@@ -113,7 +117,6 @@ void dofile(const char* filename, bool verbose)
         //  Do test line
         //
         dotestline(vo, t, p, r, v, av, region);             // do a test line
-
     }
 }
 
