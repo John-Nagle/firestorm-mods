@@ -42,13 +42,14 @@
 void RegionCrossExtrapolateImpl::update()
 {      
     printf("Update called.\n");                                 // ***TEMP***
-    LLVector3 vel = mOwner.getVelocity();                       // velocity in world coords
     if (!mMoved)                                                // if not seen to move
-    {   if (vel.mV[VX] != 0.0 || vel.mV[VY] != 0.0 || vel.mV[VZ] != 0) // check for nonzero velocity
+    {   LLVector3 rawvel = mOwner.getVelocity();                // velocity in world coords
+        if (rawvel.mV[VX] != 0.0 || rawvel.mV[VY] != 0.0 || rawvel.mV[VZ] != 0) // check for nonzero velocity
         {   mMoved = true; }                                    // moved, has seated avatar, thus is vehicle
         else
         {   return; }                                           // sitting on stationary object, skip this
     }
+    //  Moving seat - do the extrapolation calculations
     F64 dt = 1.0/45.0;                                          // dt used on first value - one physics frame on server  
     F64 now = FrameTimer::getElapsedSeconds();                  // timestamp
     if (mPreviousUpdateTime != 0.0)
@@ -59,9 +60,10 @@ void RegionCrossExtrapolateImpl::update()
     mPreviousUpdateTime = now;
     LLQuaternion rot = mOwner.getRotationRegion();              // transform in global coords
     const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
-    LLVector3 angvel = mOwner.getAngularVelocity();             // angular velocity in world coords
-    mFilteredVel.update(vel*inverserot,dt);                     // accum into filter in object coords
-    mFilteredAngVel.update(angvel*inverserot,dt);               // accum into filter 
+    LLVector3 vel = mOwner.getVelocity()*inverserot;            // velocity in object coords
+    LLVector3 angvel = mOwner.getAngularVelocity()*inverserot;  // angular velocity in object coords
+    mFilteredVel.update(vel,dt);                                // accum into filter in object coords
+    mFilteredAngVel.update(angvel,dt);                          // accum into filter 
     printf("dt: %6.3f     vel: <%4.3f,%4.3f,%4.3f>     filteredvel: <%4.3f,%4.3f,%4.3f>\n", dt,vel.mV[VX],vel.mV[VY],vel.mV[VZ], 
         mFilteredVel.get().mV[VX], mFilteredVel.get().mV[VY],mFilteredVel.get().mV[VZ]); // ***TEMP***
     printf("dt: %6.3f  angvel: <%4.3f,%4.3f,%4.3f>  filteredangvel: <%4.3f,%4.3f,%4.3f>\n", dt,angvel.mV[VX],angvel.mV[VY],angvel.mV[VZ], 
@@ -86,16 +88,18 @@ static inline F32 dividesafe(F32 num, F32 denom)
 F32 RegionCrossExtrapolateImpl::getextraptimelimit() const 
 {
     //  Time limit is max allowed error / error. Returns worst case (smallest) of vel and angular vel limits.
+    LLQuaternion rot = mOwner.getRotationRegion();              // transform in global coords
+    const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
     printf("velerr: %4.3f  allowed: %4.3f   angvelerr: %4.3f  allowed: %4.3f\n",               // ***TEMP***
-        (mOwner.getVelocity() - mFilteredVel.get()).length(),
+        (mOwner.getVelocity()*inverserot - mFilteredVel.get()).length(),
         gRegionCrossExtrapolateControl.mVelError,
-        (mOwner.getAngularVelocity() - mFilteredAngVel.get()).length(),
+        (mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length(),
         gRegionCrossExtrapolateControl.mAngVelError);
     return(std::min(
         dividesafe(gRegionCrossExtrapolateControl.mVelError,
-            ((mOwner.getVelocity() - mFilteredVel.get()).length())),
+            ((mOwner.getVelocity()*inverserot - mFilteredVel.get()).length())),
         dividesafe(gRegionCrossExtrapolateControl.mAngVelError,
-            ((mOwner.getAngularVelocity () - mFilteredAngVel.get()).length()))));
+            ((mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length()))));
 }  
 
 //

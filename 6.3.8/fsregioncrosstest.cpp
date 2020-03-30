@@ -64,7 +64,7 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
     FrameTimer::mFrameTimer = t;
     vo.mExtrap.update(vo);                                          // do the update
     F32 lim = vo.mExtrap.getextraptimelimit();                      // get current time limit
-    printf("Extrapolation limit: %3.2f secs.\n", lim);              // print limit 
+    printf("%6.2f (%s) Extrapolation limit: %3.2f secs.\n", t,region,lim);              // print limit 
 }
 //
 //  dofile -- read file of test data.
@@ -102,7 +102,7 @@ void dofile(const char* filename, bool verbose)
         LLVector3 p,v,av;
         LLQuaternion r;
         char region[61];
-        int cnt = sscanf(line.c_str(), "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%60s", 
+        int cnt = sscanf(line.c_str(), "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%60[^,]", 
             &t, 
             &p.mV[VX], &p.mV[VY], &p.mV[VZ],
             &r.mQ[VX], &r.mQ[VY], &r.mQ[VZ], &r.mQ[VW],
