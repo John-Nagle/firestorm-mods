@@ -82,10 +82,16 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
 //
 void dofile(const char* filename, bool verbose)
 {
+    //  Create seat with avatar 
     LLViewerObject vo;                          // dummy viewer object
-    vo.mExtrap.changedlink(vo);                 // do a link change
+    LLViewerObject avi;                         // dummy avatar
+    avi.mIsAvatar = true;
+    vo.mChildList.push_back(&avi);              // avatar is child of vo
+    avi.mParent = &vo;                          // backlink
+    vo.mExtrap.changedlink(vo);                 // update for link change
+    //  Open input file of logged test data
     std::cout << "Data from " << filename << std::endl;
-    std::ifstream infile(filename);          // open input file
+    std::ifstream infile(filename);             // open input file
     if (!infile.is_open())
     {   std::cout << "Unable to open " << filename << std::endl; 
         return;

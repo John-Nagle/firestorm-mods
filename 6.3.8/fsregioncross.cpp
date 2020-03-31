@@ -75,7 +75,7 @@ void RegionCrossExtrapolateImpl::update()
 //  Returns infinity for a divide by near zero.
 //
 static inline F32 dividesafe(F32 num, F32 denom)
-{    return((denom > FP_MAG_THRESHOLD                             // avoid divide by zero
+{    return((denom > FP_MAG_THRESHOLD                           // avoid divide by zero
          || denom < -FP_MAG_THRESHOLD)        
         ? (num / denom)
         : std::numeric_limits<F32>::infinity());                // return infinity if zero divide
@@ -108,8 +108,14 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
 //  Potential vehicle.
 //
 BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)  // true if root object and being sat on
-{   
-    return(true);                                               // ***TEMP***
+{   if (!vo.isRoot()) { return(false); }                        // not root, cannot be sat upon
+    for (auto iter = vo.mChildList.begin();                     // check for avatar as child of root
+		 iter != vo.mChildList.end(); iter++)
+	{
+		LLViewerObject* child = *iter;                          // get child 
+		if (child->isAvatar()) { return(true); }                // avatar as child, we have a sitter
+	}
+    return(false);                                              // no avatar children, not sat on
 }
 
 //
