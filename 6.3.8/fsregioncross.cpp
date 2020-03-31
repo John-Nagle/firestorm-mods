@@ -32,6 +32,19 @@
 //
 //  Improved region crossing prediction.
 //
+//  Debug tuning parameters. This code will try to limit the maximum position and angle error to the specified limits.
+//  The limits can be adjusted as debug symbols, but that should not be necessary.
+//
+static const F32 defaultPositionErrLimit = 1.0;                     // (m) default position error limit
+static const F32 defaultAngleErrLimit = 20.0;                       // (degrees) default angle error limit 
+static const F32 defaultSmoothingTime = 2.0;                        // default smoothing time for predictor
+static LLCachedControl<F32> fsRegionCrossingPositionErrorLimit(gSavedSettings, "FSRegionCrossingPositionErrorLimit",
+    defaultPositionErrLimit,"(m) Region crossing position error limit");
+static LLCachedControl<F32> fsRegionCrossingAngleErrorLimit(gSavedSettings, "FSRegionCrossingAngleErrorLimit",
+    defaultAngleErrLimit, "(deg) Region crossing angle error limit") ;
+static LLCachedControl<F32> fsRegionCrossingSmoothingTime(gSavedSettings, "FSRegionCrossingSmoothingTime",
+    defaultSmoothingTime, "(secs) Region crossing smoothing filter time");
+//
 //
 //  update -- called for each object update message to "vehicle" objects.
 //
@@ -92,13 +105,13 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
     const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
     printf("velerr: %4.3f  allowed: %4.3f   angvelerr: %4.3f  allowed: %4.3f\n",               // ***TEMP***
         (mOwner.getVelocity()*inverserot - mFilteredVel.get()).length(),
-        gRegionCrossExtrapolateControl.mVelError,
-        (mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length(),
-        gRegionCrossExtrapolateControl.mAngVelError);
+        F32(fsRegionCrossingPositionErrorLimit),
+        (mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length()*(180/M_PI),
+        F32(fsRegionCrossingAngleErrorLimit));
     return(std::min(
-        dividesafe(gRegionCrossExtrapolateControl.mVelError,
+        dividesafe(fsRegionCrossingPositionErrorLimit,
             ((mOwner.getVelocity()*inverserot - mFilteredVel.get()).length())),
-        dividesafe(gRegionCrossExtrapolateControl.mAngVelError,
+        dividesafe(fsRegionCrossingAngleErrorLimit,
             ((mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length()))));
 }  
 
@@ -134,15 +147,12 @@ void LowPassFilter::update(const LLVector3& val, F32 secs)      // add new value
         return;
     }
     F32 filtermult = 1.0;                                       // no filtering if zero filter time
-    if (gRegionCrossExtrapolateControl.mFilterTime > 0.001)     // avoid divide by zero
-    {   filtermult = 1.0 - 1.0/pow(1.0+1.0/gRegionCrossExtrapolateControl.mFilterTime,secs);  }        // filter scale factor
+    if (fsRegionCrossingSmoothingTime > 0.001)     // avoid divide by zero
+    {   filtermult = 1.0 - 1.0/pow(1.0+1.0/fsRegionCrossingSmoothingTime,secs);  }        // filter scale factor
     printf("Filter mult: %6.3f\n",filtermult);                  // ***TEMP***
     mFiltered = val * filtermult + mFiltered*(1.0-filtermult);  // low pass filter
 }
-//
-//  Control singleton
-//
-RegionCrossExtrapolateControl gRegionCrossExtrapolateControl;
+
 
 
 

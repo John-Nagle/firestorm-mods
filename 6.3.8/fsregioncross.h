@@ -38,38 +38,6 @@
 class LLViewerObject;                                               // forward declaration
 
 //
-//  RegionCrossExtrapolateControl -- configuration control for region cross predictor
-//
-//  This is a singleton, or a "monad", if you prefer.
-//
-class RegionCrossExtrapolateControl {
-private:
-    F32 mFilterTime;                                // (secs) decay time of filter
-    F32 mVelError;                                  // (m/sec) error limit for velocity
-    F32 mAngVelError;                               // (rad/sec) error limit for angle
-    friend class RegionCrossExtrapolateImpl;        // extrapolator can look at these
-    friend class LowPassFilter;                     // low pass filter can look at these
-public:
-    RegionCrossExtrapolateControl() :               // constructor
-    mFilterTime(0.0),                               // no filtering by default
-    mVelError(std::numeric_limits<F32>::infinity()),// no limits on error
-    mAngVelError(std::numeric_limits<F32>::infinity())
-    {}
-
-    //  Set extrapolation parameters.
-    //  filtertime = 0 means no filtering. limiting will not be applied.
-    //  Larger values mean a longer accumulation time for filtering, i.e. lower pass.
-    //  Units are secs, meters, radians
-    void setfilterconstants(F32 filtertime, F32 vellimit, F32 angvellimit)
-    {   mFilterTime = filtertime;
-        mVelError = vellimit;
-        mAngVelError = angvellimit;
-    }
-};
-
-extern RegionCrossExtrapolateControl gRegionCrossExtrapolateControl;            // declare singleton
-
-//
 //  LowPassFilter -- a simple Kalman low-pass filter.
 //
 //  Supports nonuniform time deltas between samples, since object update times are not consistent.

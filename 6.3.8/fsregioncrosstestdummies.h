@@ -1,6 +1,7 @@
 #ifndef FSREGIONCROSSDUMMIES_H
 #define FSREGIONCROSSDUMMIES_H
 #include <math.h>
+#include <string>
 //
 //  Dummy types normally defined within Firestorm/LL code
 //
@@ -123,5 +124,38 @@ inline F32	LLQuaternion::normalize()
 namespace FrameTimer {
     F64 getElapsedSeconds();      // forward
 };
+
+
+//
+//  Debug control dummies
+//
+class LLControlGroup {
+};
+
+template <typename T>
+class LLCachedControl
+{
+public:
+    T mValue;                               // value of the control
+public:
+	LLCachedControl(LLControlGroup& group,
+					const std::string& name,
+					const T& default_value, 
+					const std::string& comment = "Declared In Code")
+	{
+	    mValue = default_value;
+	}
+
+	LLCachedControl(LLControlGroup& group,
+					const std::string& name)
+	{
+	}
+    //  Access
+	operator const T&() const { return(mValue); }
+////	operator boost::function<const T&()> () const { return boost::function<const T&()>(*this); }
+////	const T& operator()() { return mCachedControlPtr->getValue(); }
+};
+
+extern LLControlGroup gSavedSettings;                                       // dummy singleton
 
 #endif // FSREGIONCROSSDUMMIES_H

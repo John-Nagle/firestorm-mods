@@ -17,10 +17,10 @@ namespace FrameTimer {
     {   return(mFrameTimer);    
     }
 };
-
-//  
-//  Dummy LLViewerObject
 //
+//  Dummy debug controls
+//
+LLControlGroup gSavedSettings;
 
 //
 //  Dummy quaternion math
@@ -140,8 +140,6 @@ int main(int argc, char** argv)
                 default: std::cerr << "Unknown option: " << arg << std::endl; return(1); 
             }
         } else {
-            const float DEG_TO_RADIANS = M_PI / 180;
-            gRegionCrossExtrapolateControl.setfilterconstants(5.0, 1.0, 20.0*DEG_TO_RADIANS);
             dofile(arg, verbose);                                   // do indicated file
         }
     }
