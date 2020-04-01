@@ -84,12 +84,13 @@ private:
     F64 mPreviousUpdateTime;                                        // previous update time
     LowPassFilter mFilteredVel;                                     // filtered velocity
     LowPassFilter mFilteredAngVel;                                  // filtered angular velocity
+    F64 mExtrapTimeLimit;                                           // extrapolation time limit during region crossings
     BOOL mMoved;                                                    // seen to move at least once
 
 public:
     RegionCrossExtrapolateImpl(const LLViewerObject& vo);           // constructor
     void update();                                                  // update on object update message  
-    F32 getextraptimelimit() const;                                 // don't extrapolate more than this
+    F32 getextraptimelimit();                                       // don't extrapolate more than this
 };
 
 //
