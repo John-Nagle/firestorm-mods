@@ -2799,12 +2799,13 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& frame_tim
 			}
 			else
 			{
-				// <FS:Ansariel> FIRE-24184: Replace previous region crossing movement fix with LL's version and add option to turn it off
+				// <FS:Ansariel> FIRE-24184: Replace previous region crossing movement fix with LL's version and add option to turn it off 
 				static LLCachedControl<S32> fsExperimentalRegionCrossingMovementFix(gSavedSettings, "FSExperimentalRegionCrossingMovementFix");
 				if (fsExperimentalRegionCrossingMovementFix == 1)
 				{
 				// </FS:Ansariel>
 				//  EXPERIMENTAL - JN
+				F32 sink = mExtrap.getextraptimelimit();                // ***TEMP TEST*** exercise extrapolation code but do not use result
 				////setAngularVelocity(LLVector3::zero);                // stop rotation when off region
 				//  END EXPERIMENTAL - JN
 				// Check for how long we are crossing.

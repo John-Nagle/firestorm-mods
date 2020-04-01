@@ -45,16 +45,6 @@
 //  Debug tuning parameters. This code will try to limit the maximum position and angle error to the specified limits.
 //  The limits can be adjusted as debug symbols, but that should not be necessary.
 //
-#define TEMPTEST
-#ifdef TEMPTEST // debugging crash related to controls
-static F32 fsRegionCrossingPositionErrorLimit = 1.0;
-static F32 fsRegionCrossingAngleErrorLimit = 20.0;
-static F32 fsRegionCrossingSmoothingTime = 2.0;
-#else
-static LLCachedControl<F32> fsRegionCrossingPositionErrorLimit(gSavedSettings, "FSRegionCrossingPositionErrorLimit");
-static LLCachedControl<F32> fsRegionCrossingAngleErrorLimit(gSavedSettings, "FSRegionCrossingAngleErrorLimit");
-static LLCachedControl<F32> fsRegionCrossingSmoothingTime(gSavedSettings, "FSRegionCrossingSmoothingTime");
-#endif // TEMPTEST
 //
 //  Constructor -- called when something sits on the object.
 //
@@ -67,14 +57,6 @@ RegionCrossExtrapolateImpl::RegionCrossExtrapolateImpl(const LLViewerObject& vo)
     mMoved(false)                                                   // has not moved yet
     {
         LL_INFOS() << "Object " << vo.getID().asString() << " has sitter." << LL_ENDL;    // log sit event
-#ifdef UNITTEST 
-#ifndef TEMPTEST 
-                                                                    // Unit test only, set in XML in Firestorm.
-        fsRegionCrossingPositionErrorLimit.mValue = 1.0;            // (m) default position error limit
-        fsRegionCrossingAngleErrorLimit.mValue = 20.0;              // (degrees) default angle error limit
-        fsRegionCrossingSmoothingTime.mValue = 2.0;                 // default smoothing time for predictor 
-#endif // TEMPTEST
-#endif // UNITTEST
     }
 
 //
@@ -133,7 +115,12 @@ static inline F32 dividesafe(F32 num, F32 denom)
 //
 F32 RegionCrossExtrapolateImpl::getextraptimelimit() const 
 {
-    if (fsRegionCrossingSmoothingTime <= 0.001) { return(std::numeric_limits<F32>::infinity()); } // limiting is turned off
+    static LLCachedControl<F32> fsRegionCrossingPositionErrorLimit(gSavedSettings, "FSRegionCrossingPositionErrorLimit");
+    static LLCachedControl<F32> fsRegionCrossingAngleErrorLimit(gSavedSettings, "FSRegionCrossingAngleErrorLimit");   
+#ifdef UNITTEST                                                                 // Unit test only, set in XML in Firestorm.
+    fsRegionCrossingPositionErrorLimit.mValue = 1.0;                            // (m) default position error limit
+    fsRegionCrossingAngleErrorLimit.mValue = 20.0;                              // (degrees) default angle error limit
+#endif // UNITTEST
     //  Time limit is max allowed error / error. Returns worst case (smallest) of vel and angular vel limits.
     LLQuaternion rot = mOwner.getRotationRegion();              // transform in global coords
     const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
@@ -182,6 +169,10 @@ BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)  // true if root 
 //
 void LowPassFilter::update(const LLVector3& val, F32 secs)      // add new value into filter
 {
+    static LLCachedControl<F32> fsRegionCrossingSmoothingTime(gSavedSettings, "FSRegionCrossingSmoothingTime");
+#ifdef UNITTEST                                                 // Unit test only, off in Firestorm
+    fsRegionCrossingSmoothingTime.mValue = 2.0;                 // default smoothing time for predictor 
+#endif // UNITTEST
     if (!mInitialized)                                          // if not initialized yet
     {   mFiltered = val;                                        // just use new value
         mInitialized = true;
