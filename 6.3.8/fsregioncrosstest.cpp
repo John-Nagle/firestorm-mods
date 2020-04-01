@@ -82,6 +82,11 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
 //
 void dofile(const char* filename, bool verbose)
 {
+    //  Set debug params
+    const F32 defaultPositionErrLimit = 1.0;                     // (m) default position error limit
+    const F32 defaultAngleErrLimit = 20.0;                       // (degrees) default angle error limit 
+    const F32 defaultSmoothingTime = 2.0;                        // default smoothing time for predictor
+
     //  Create seat with avatar 
     LLViewerObject vo;                          // dummy viewer object
     LLViewerObject avi;                         // dummy avatar

@@ -143,6 +143,7 @@ class LLCachedControl
 public:
     T mValue;                               // value of the control
 public:
+#ifdef OBSOLETE // doesnt' seem to work
 	LLCachedControl(LLControlGroup& group,
 					const std::string& name,
 					const T& default_value, 
@@ -150,6 +151,7 @@ public:
 	{
 	    mValue = default_value;
 	}
+#endif // OBSOLETE
 
 	LLCachedControl(LLControlGroup& group,
 					const std::string& name)
