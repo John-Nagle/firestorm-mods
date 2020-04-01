@@ -25,12 +25,12 @@
  * http://www.firestormviewer.org
  */
  
-#ifdef UNITTEST                                                 // only needed when testing outside Firestorm
-#include "fsregioncrosstestdummies.h"                           // ***TEMP***
+#ifdef UNITTEST                                                 // UNITTEST code only needed when testing outside Firestorm
+#include "fsregioncrosstestdummies.h"                          
 #endif // UNITTEST
 #include "fsregioncross.h"
 #ifdef UNITTEST
-#include "llviewerobjectdummy.h"                                // ***TEMP***
+#include "llviewerobjectdummy.h"                               
 #endif // UNITTEST
 
 //
