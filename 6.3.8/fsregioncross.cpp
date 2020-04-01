@@ -134,11 +134,13 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
         (mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length()*(180/M_PI),
         F32(fsRegionCrossingAngleErrorLimit));
 #endif // UNITTEST
-    return(std::min(
+    F32 extraplim = std::min(
         dividesafe(fsRegionCrossingPositionErrorLimit,
             ((mOwner.getVelocity()*inverserot - mFilteredVel.get()).length())),
         dividesafe(fsRegionCrossingAngleErrorLimit,
-            ((mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length()))));
+            ((mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length())));
+    LL_INFOS() << "Region cross extrapolation safe limit " << extraplim << " secs." << LL_ENDL;
+    return(extraplim);                                          // do not extrapolate more than this
 }  
 
 //
