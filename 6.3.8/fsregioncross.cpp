@@ -26,7 +26,13 @@
  */
  
 #ifdef UNITTEST                                                 // UNITTEST code only needed when testing outside Firestorm
-#include "fsregioncrosstestdummies.h"                          
+#include "fsregioncrosstestdummies.h"     
+#else
+#include "llviewerprecompiledheaders.h"                         // regular Firestorm includes
+#include "llviewercontrol.h"
+#include "llmath.h"                                             // normal build
+#include "llviewerobject.h"
+#include "llframetimer.h"                     
 #endif // UNITTEST
 #include "fsregioncross.h"
 #ifdef UNITTEST
@@ -67,7 +73,7 @@ void RegionCrossExtrapolateImpl::update()
     }
     //  Moving seat - do the extrapolation calculations
     F64 dt = 1.0/45.0;                                          // dt used on first value - one physics frame on server  
-    F64 now = FrameTimer::getElapsedSeconds();                  // timestamp
+    F64 now = LLFrameTimer::getElapsedSeconds();                // timestamp
     if (mPreviousUpdateTime != 0.0)
     {   dt = now - mPreviousUpdateTime;                         // change since last update
         //  ***SHOULD ADJUST FOR PING TIME AND TIME DILATION***
@@ -129,8 +135,8 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
 //
 BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)  // true if root object and being sat on
 {   if (!vo.isRoot()) { return(false); }                        // not root, cannot be sat upon
-    for (auto iter = vo.mChildList.begin();                     // check for avatar as child of root
-		 iter != vo.mChildList.end(); iter++)
+    for (auto iter = vo.getChildren().begin();                  // check for avatar as child of root
+		 iter != vo.getChildren().end(); iter++)
 	{
 		LLViewerObject* child = *iter;                          // get child 
 		if (child->isAvatar()) { return(true); }                // avatar as child, we have a sitter
