@@ -25,9 +25,13 @@
  * http://www.firestormviewer.org
  */
  
+#ifdef UNITTEST                                                 // only needed when testing outside Firestorm
 #include "fsregioncrosstestdummies.h"                           // ***TEMP***
+#endif // UNITTEST
 #include "fsregioncross.h"
+#ifdef UNITTEST
 #include "llviewerobjectdummy.h"                                // ***TEMP***
+#endif // UNITTEST
 
 //
 //  Improved region crossing prediction.
@@ -54,7 +58,6 @@ static LLCachedControl<F32> fsRegionCrossingSmoothingTime(gSavedSettings, "FSReg
 //
 void RegionCrossExtrapolateImpl::update()
 {      
-    printf("Update called.\n");                                 // ***TEMP***
     if (!mMoved)                                                // if not seen to move
     {   LLVector3 rawvel = mOwner.getVelocity();                // velocity in world coords
         if (rawvel.mV[VX] != 0.0 || rawvel.mV[VY] != 0.0 || rawvel.mV[VZ] != 0) // check for nonzero velocity
@@ -77,10 +80,12 @@ void RegionCrossExtrapolateImpl::update()
     LLVector3 angvel = mOwner.getAngularVelocity()*inverserot;  // angular velocity in object coords
     mFilteredVel.update(vel,dt);                                // accum into filter in object coords
     mFilteredAngVel.update(angvel,dt);                          // accum into filter 
+#ifdef UNITTEST
     printf("dt: %6.3f     vel: <%4.3f,%4.3f,%4.3f>     filteredvel: <%4.3f,%4.3f,%4.3f>\n", dt,vel.mV[VX],vel.mV[VY],vel.mV[VZ], 
         mFilteredVel.get().mV[VX], mFilteredVel.get().mV[VY],mFilteredVel.get().mV[VZ]); // ***TEMP***
     printf("dt: %6.3f  angvel: <%4.3f,%4.3f,%4.3f>  filteredangvel: <%4.3f,%4.3f,%4.3f>\n", dt,angvel.mV[VX],angvel.mV[VY],angvel.mV[VZ], 
         mFilteredAngVel.get().mV[VX], mFilteredAngVel.get().mV[VY],mFilteredAngVel.get().mV[VZ]); // ***TEMP***
+#endif // UNITTEST
 }
 //
 //  dividesafe -- floating divide with divide by zero check
@@ -103,11 +108,13 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
     //  Time limit is max allowed error / error. Returns worst case (smallest) of vel and angular vel limits.
     LLQuaternion rot = mOwner.getRotationRegion();              // transform in global coords
     const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
+#ifdef UNITTEST
     printf("velerr: %4.3f  allowed: %4.3f   angvelerr: %4.3f  allowed: %4.3f\n",               // ***TEMP***
         (mOwner.getVelocity()*inverserot - mFilteredVel.get()).length(),
         F32(fsRegionCrossingPositionErrorLimit),
         (mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length()*(180/M_PI),
         F32(fsRegionCrossingAngleErrorLimit));
+#endif // UNITTEST
     return(std::min(
         dividesafe(fsRegionCrossingPositionErrorLimit,
             ((mOwner.getVelocity()*inverserot - mFilteredVel.get()).length())),
@@ -149,7 +156,6 @@ void LowPassFilter::update(const LLVector3& val, F32 secs)      // add new value
     F32 filtermult = 1.0;                                       // no filtering if zero filter time
     if (fsRegionCrossingSmoothingTime > 0.001)     // avoid divide by zero
     {   filtermult = 1.0 - 1.0/pow(1.0+1.0/fsRegionCrossingSmoothingTime,secs);  }        // filter scale factor
-    printf("Filter mult: %6.3f\n",filtermult);                  // ***TEMP***
     mFiltered = val * filtermult + mFiltered*(1.0-filtermult);  // low pass filter
 }
 
