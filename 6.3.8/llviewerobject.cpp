@@ -2441,6 +2441,11 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 
 			avatar->clampAttachmentPositions();
 		}
+		//
+		//  Region crossing extrapolation improvement <FS:JN>
+		//
+		if (b_changed_status) { mExtrap.changedlink(*this); }                       // if linking update, check for sitters
+		mExtrap.update(*this);                                                      // update extrapolation if needed
 
 #ifdef DEBUG_REGION_CROSS                                                       // <FS:JN> region crossing debugging
 		//  Dump message info for own avatar or vehicle on which avatar is riding.

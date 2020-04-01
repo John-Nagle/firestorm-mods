@@ -44,6 +44,8 @@
 #include "llbbox.h"
 #include "llrigginginfo.h"
 
+#include "fsregioncross.h" // <FS:JN> Improved region crossing support
+
 class LLAgent;			// TODO: Get rid of this.
 class LLAudioSource;
 class LLAudioSourceVO;
@@ -927,6 +929,8 @@ public:
 	LLViewerPartSourceScript* getPartSourceScript() { return mPartSourcep.get(); }
 	bool getPhysicsShapeUnknown () { return mPhysicsShapeUnknown; }
 	// </FS:Techwolf Lupindo>
+private:
+    RegionCrossExtrapolate mExtrap;                     // <FS:JN> improved extrapolator
 };
 
 ///////////////////
