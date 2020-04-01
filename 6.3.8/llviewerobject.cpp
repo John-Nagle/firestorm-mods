@@ -937,6 +937,7 @@ void LLViewerObject::addChild(LLViewerObject *childp)
 		mChildList.push_back(childp);
         childp->afterReparent();
 	}
+	mExtrap.changedlink(*this);                        // <FS:JN> if linking update, check for sitters
 }
 
 void LLViewerObject::onReparent(LLViewerObject *old_parent, LLViewerObject *new_parent)
@@ -967,7 +968,7 @@ void LLViewerObject::removeChild(LLViewerObject *childp)
 			break;
 		}
 	}
-	
+    mExtrap.changedlink(*this);                                 // <FS:JN> if linking update, check for sitters
 	if (childp->isSelected())
 	{
 		LLSelectMgr::getInstance()->deselectObjectAndFamily(childp);
@@ -2444,7 +2445,6 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 		//
 		//  Region crossing extrapolation improvement <FS:JN>
 		//
-		if (b_changed_status) { mExtrap.changedlink(*this); }                       // if linking update, check for sitters
 		mExtrap.update(*this);                                                      // update extrapolation if needed
 
 #ifdef DEBUG_REGION_CROSS                                                       // <FS:JN> region crossing debugging
