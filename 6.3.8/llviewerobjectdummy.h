@@ -37,6 +37,7 @@ public:
     BOOL isAvatar() const { return(mIsAvatar); }
     LLViewerObject* getParent() const { return(mParent); }
     BOOL isRoot() const { return(getParent() == NULL); }
+    const std::vector<LLViewerObject*>& getChildren() const { return(mChildList); } 
 };
 
 #endif // LLVIEWEROBJECT_H

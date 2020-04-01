@@ -121,7 +121,7 @@ inline F32	LLQuaternion::normalize()
 	return mag;
 }
 
-namespace FrameTimer {
+namespace LLFrameTimer {
     F64 getElapsedSeconds();      // forward
 };
 

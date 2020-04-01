@@ -11,7 +11,7 @@
 //
 //  Dummy FrameTimer
 //
-namespace FrameTimer {
+namespace LLFrameTimer {
     static F64 mFrameTimer;
     F64 getElapsedSeconds()
     {   return(mFrameTimer);    
@@ -61,7 +61,7 @@ void dotestline(LLViewerObject& vo, float t, LLVector3 p, LLQuaternion r, LLVect
     vo.mRot = r;
     vo.mVel = v;
     vo.mAngVel = av;
-    FrameTimer::mFrameTimer = t;
+    LLFrameTimer::mFrameTimer = t;
     vo.mExtrap.update(vo);                                          // do the update
     F32 lim = vo.mExtrap.getextraptimelimit();                      // get current time limit
     printf("%6.2f (%s) Extrapolation limit: %3.2f secs.\n", t,region,lim);              // print limit 
