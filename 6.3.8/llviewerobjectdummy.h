@@ -8,6 +8,13 @@
 //
 //  For unit test only. Not needed inside viewer.
 //
+//  class DummyID, so we can apply asString to it. In FS this gets the UUID as a string
+//
+class DummyID 
+{
+public: 
+    const std::string asString() const { return(std::string("UUID")); }
+};
 class LLViewerObject                                                // dummy for testing
 {
 public:
@@ -23,6 +30,7 @@ public:
     std::vector<LLViewerObject*> mChildList;
     LLViewerObject* mParent;                                        // parent object
     BOOL mIsAvatar;
+    DummyID mDummyID;
     
 public:
     LLViewerObject() :
@@ -38,6 +46,7 @@ public:
     LLViewerObject* getParent() const { return(mParent); }
     BOOL isRoot() const { return(getParent() == NULL); }
     const std::vector<LLViewerObject*>& getChildren() const { return(mChildList); } 
+    const DummyID& getID() const { return(mDummyID); }
 };
 
 #endif // LLVIEWEROBJECT_H

@@ -55,6 +55,19 @@ static LLCachedControl<F32> fsRegionCrossingAngleErrorLimit(gSavedSettings, "FSR
 static LLCachedControl<F32> fsRegionCrossingSmoothingTime(gSavedSettings, "FSRegionCrossingSmoothingTime",
     defaultSmoothingTime, "(secs) Region crossing smoothing filter time");
 //
+//  Constructor -- called when something sits on the object.
+//
+//  Potential vehicle, but might be just a chair.
+//  We don't start the movement averaging until there's movement.
+//
+RegionCrossExtrapolateImpl::RegionCrossExtrapolateImpl(const LLViewerObject& vo) :          // constructor
+    mOwner(vo),                                                     // back ref to owner
+    mPreviousUpdateTime(0),                                         // time of last update
+    mMoved(false)                                                   // has not moved yet
+    {
+        LL_INFOS() << "Object " << vo.getID().asString() << " has sitter." << LL_ENDL;    // log sit event
+    }
+
 //
 //  update -- called for each object update message to "vehicle" objects.
 //
@@ -136,10 +149,13 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
 BOOL RegionCrossExtrapolate::ifsaton(const LLViewerObject& vo)  // true if root object and being sat on
 {   if (!vo.isRoot()) { return(false); }                        // not root, cannot be sat upon
     for (auto iter = vo.getChildren().begin();                  // check for avatar as child of root
-		 iter != vo.getChildren().end(); iter++)
+	    iter != vo.getChildren().end(); iter++)
 	{
 		LLViewerObject* child = *iter;                          // get child 
-		if (child->isAvatar()) { return(true); }                // avatar as child, we have a sitter
+		if (child->isAvatar())                                  // avatar as child        
+		{                                                       
+		    return(true);                                       // we have a sitter
+		}
 	}
     return(false);                                              // no avatar children, not sat on
 }

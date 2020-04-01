@@ -87,21 +87,8 @@ private:
     BOOL mMoved;                                                    // seen to move at least once
 
 public:
-    RegionCrossExtrapolateImpl(const LLViewerObject& vo) :          // constructor
-    mOwner(vo),                                                     // back ref to owner
-    mPreviousUpdateTime(0),                                         // time of last update
-    mMoved(false)                                                   // has not moved yet
-    {
-        printf("RegionCrossExtrapolateImpl initialized.\n");        // ***TEMP***        
-    }
-    
-    ~RegionCrossExtrapolateImpl()                                   // destructor
-    {
-        printf("RegionCrossExtrapolateImpl deleted.\n");            // ***TEMP***
-    }
-
-    void update();                                                  // update on object update message
-  
+    RegionCrossExtrapolateImpl(const LLViewerObject& vo);           // constructor
+    void update();                                                  // update on object update message  
     F32 getextraptimelimit() const;                                 // don't extrapolate more than this
 };
 

@@ -2,6 +2,7 @@
 #define FSREGIONCROSSDUMMIES_H
 #include <math.h>
 #include <string>
+#include <iostream>
 //
 //  Dummy types normally defined within Firestorm/LL code
 //
@@ -11,6 +12,10 @@ typedef float F32;
 typedef double F64;
 typedef int U32;
 typedef bool BOOL;
+
+//  Dummies for viewer debug logging
+#define LL_INFOS() std::cout
+#define LL_ENDL std::endl
 
 const int VX = 0;
 const int VY = 1;
