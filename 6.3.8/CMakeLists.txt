@@ -208,6 +208,8 @@ set(viewer_SOURCE_FILES
     fsradarentry.cpp
     fsradarlistctrl.cpp
     fsradarmenu.cpp
+    # <FS:JN Region crossing smoothing>
+    fsregioncross.cpp
     fsscriptlibrary.cpp
     fsscrolllistctrl.cpp
     fsslurlcommand.cpp
@@ -964,6 +966,9 @@ set(viewer_HEADER_FILES
     fsradarentry.h
     fsradarlistctrl.h
     fsradarmenu.h
+    # <FS:JN Region crossing smoothing>
+    fsregioncross.h
+
     fsscriptlibrary.h
     fsscrolllistctrl.h
     fsslurl.h
