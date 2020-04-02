@@ -2804,10 +2804,6 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& frame_tim
 				if (fsExperimentalRegionCrossingMovementFix == 1)
 				{
 				// </FS:Ansariel>
-				//  EXPERIMENTAL - JN
-				F32 sink = mExtrap.getextraptimelimit();                // ***TEMP TEST*** exercise extrapolation code but do not use result
-				////setAngularVelocity(LLVector3::zero);                // stop rotation when off region
-				//  END EXPERIMENTAL - JN
 				// Check for how long we are crossing.
 				// Note: theoretically we can find time from velocity, acceleration and
 				// distance from border to new position, but it is not going to work
@@ -2818,7 +2814,13 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& frame_tim
 					// so just write down time 'after the fact', it is far from optimal in
 					// case of lags, but for lags sMaxUpdateInterpolationTime will kick in first
 					LL_DEBUGS("Interpolate") << "Predicted region crossing, new position " << new_pos << LL_ENDL;
-					mRegionCrossExpire = frame_time + sMaxRegionCrossingInterpolationTime;
+					//  <FS:JN> Limit region crossing time using smart limiting
+					F64Seconds saferegioncrosstimelimit(mExtrap.getextraptimelimit());  // longest time we can safely extrapolate
+				    F64Seconds maxregioncrosstime = std::min(saferegioncrosstimelimit,sMaxRegionCrossingInterpolationTime);  // new interpolation code
+					mRegionCrossExpire = frame_time + maxregioncrosstime;   // region cross expires then
+				    setAcceleration(LLVector3::zero);                       // no accel during region crossings
+			        //  <FS:JN> Limit region crossing time using smart limiting end
+
 				}
 				else if (frame_time > mRegionCrossExpire)
 				{
