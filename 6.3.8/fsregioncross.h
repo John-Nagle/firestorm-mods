@@ -84,13 +84,13 @@ private:
     F64 mPreviousUpdateTime;                                        // previous update time
     LowPassFilter mFilteredVel;                                     // filtered velocity
     LowPassFilter mFilteredAngVel;                                  // filtered angular velocity
-    F64 mExtrapTimeLimit;                                           // extrapolation time limit during region crossings
     BOOL mMoved;                                                    // seen to move at least once
 
 public:
     RegionCrossExtrapolateImpl(const LLViewerObject& vo);           // constructor
     void update();                                                  // update on object update message  
-    F32 getextraptimelimit();                                       // don't extrapolate more than this
+    F32 getextraptimelimit() const;                                 // don't extrapolate more than this
+    BOOL hasmoved() const { return(mMoved); }                       // true if has been seen to move with sitter
 };
 
 //
@@ -123,6 +123,11 @@ public:
             if (mImpl.get())
             {   mImpl.reset(); }                                    // no longer needed                           
         }
+    }
+    
+    BOOL ismovingssaton(const LLViewerObject &vo)
+    {   if (!mImpl.get()) { return(false); }                        // not sat on
+        return(mImpl->hasmoved());                                  // sat on, check for moving
     }
     
     F32 getextraptimelimit() const                                  // get extrapolation time limit

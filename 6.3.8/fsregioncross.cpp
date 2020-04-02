@@ -54,8 +54,7 @@
 RegionCrossExtrapolateImpl::RegionCrossExtrapolateImpl(const LLViewerObject& vo) :          // constructor
     mOwner(vo),                                                     // back ref to owner
     mPreviousUpdateTime(0),                                         // time of last update
-    mMoved(false),                                                  // has not moved yet
-    mExtrapTimeLimit(std::numeric_limits<F32>::infinity())          // extrapolation time limit
+    mMoved(false)                                                   // has not moved yet
     {
         LL_INFOS() << "Object " << vo.getID().asString() << " has sitter." << LL_ENDL;    // log sit event
     }
@@ -77,7 +76,6 @@ void RegionCrossExtrapolateImpl::update()
         {   return; }                                           // sitting on stationary object, skip this
     }
     //  Moving seat - do the extrapolation calculations
-    mExtrapTimeLimit = std::numeric_limits<F32>::infinity();    // invalidate any old prediction
     F64 dt = 1.0/45.0;                                          // dt used on first value - one physics frame on server  
     F64 now = LLFrameTimer::getElapsedSeconds();                // timestamp
     if (mPreviousUpdateTime != 0.0)
@@ -115,7 +113,7 @@ static inline F32 dividesafe(F32 num, F32 denom)
 //
 //  Returns seconds of extrapolation that will probably stay within set limits of error.
 //
-F32 RegionCrossExtrapolateImpl::getextraptimelimit() 
+F32 RegionCrossExtrapolateImpl::getextraptimelimit() const
 {
     static LLCachedControl<F32> fsRegionCrossingPositionErrorLimit(gSavedSettings, "FSRegionCrossingPositionErrorLimit");
     static LLCachedControl<F32> fsRegionCrossingAngleErrorLimit(gSavedSettings, "FSRegionCrossingAngleErrorLimit");   
@@ -123,9 +121,7 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit()
     fsRegionCrossingPositionErrorLimit.mValue = 1.0;                            // (m) default position error limit
     fsRegionCrossingAngleErrorLimit.mValue = 20.0;                              // (degrees) default angle error limit
 #endif // UNITTEST
-    if (mExtrapTimeLimit < std::numeric_limits<F32>::infinity())                // if previously calculated
-    {   return(mExtrapTimeLimit); }                                             // use it
-    //  Time limit is max allowed error / error. Returns worst case (smallest) of vel and angular vel limits.
+   //  Time limit is max allowed error / error. Returns worst case (smallest) of vel and angular vel limits.
     LLQuaternion rot = mOwner.getRotationRegion();              // transform in global coords
     const LLQuaternion& inverserot = rot.conjugate();           // transform global to local
 #ifdef UNITTEST
@@ -136,13 +132,13 @@ F32 RegionCrossExtrapolateImpl::getextraptimelimit()
         F32(fsRegionCrossingAngleErrorLimit));
 #endif // UNITTEST
     //  Calculate safe extrapolation time limit.
-    mExtrapTimeLimit = std::min(
+    F32 extrapTimeLimit = std::min(
         dividesafe(fsRegionCrossingPositionErrorLimit,
             ((mOwner.getVelocity()*inverserot - mFilteredVel.get()).length())),
         dividesafe(fsRegionCrossingAngleErrorLimit,
             ((mOwner.getAngularVelocity()*inverserot - mFilteredAngVel.get()).length())));
-    LL_INFOS() << "Region cross extrapolation safe limit " << mExtrapTimeLimit << " secs." << LL_ENDL;
-    return(mExtrapTimeLimit);                                                   // do not extrapolate more than this
+    LL_INFOS() << "Region cross extrapolation safe limit " << extrapTimeLimit << " secs." << LL_ENDL;
+    return(extrapTimeLimit);                                                   // do not extrapolate more than this
 }  
 
 //

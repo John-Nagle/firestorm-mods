@@ -2446,6 +2446,7 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 		//  Region crossing extrapolation improvement <FS:JN>
 		//
 		mExtrap.update(*this);                                                      // update extrapolation if needed
+		mRegionCrossExpire = 0;                                                     // restart extrapolation clock on object update
 
 #ifdef DEBUG_REGION_CROSS                                                       // <FS:JN> region crossing debugging
 		//  Dump message info for own avatar or vehicle on which avatar is riding.
@@ -2828,7 +2829,12 @@ void LLViewerObject::interpolateLinearMotion(const F64SecondsImplicit& frame_tim
 					// Stop motion
 					LL_DEBUGS("Interpolate") << "Predicting region crossing for too long, stopping at " << new_pos << LL_ENDL;
 					new_v.clear();
-					setAcceleration(LLVector3::zero);
+					
+					//  <FS:JN> For region crossing vehicles, stop rotation too. Paranoia consideration above about endlessly rotating objects does not apply.
+					if (mExtrap.ismovingssaton(*this))                          // if moving and sat on and crossing regions, almost certainly a vehicle with avatars
+					{   setAngularVelocity(LLVector3::zero);                    // for region crossing vehicles, stop rotation too.
+					    setAcceleration(LLVector3::zero);                       // Stop everything
+					} 
 					mRegionCrossExpire = 0;
 				}
 				// <FS:Ansariel> FIRE-24184: Replace previous region crossing movement fix with LL's version and add option to turn it off
