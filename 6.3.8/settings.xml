@@ -25093,8 +25093,7 @@ Change of this parameter will affect the layout of buttons in notification toast
       <string>S32</string>
       <key>Value</key>
       <integer>0</integer>
-    </map>
-    
+    </map>    
     <key>FSRegionCrossingPositionErrorLimit</key>
     <map>
       <key>Comment</key>
@@ -25104,9 +25103,8 @@ Change of this parameter will affect the layout of buttons in notification toast
       <key>Type</key>
       <string>F32</string>
       <key>Value</key>
-      <real>1.0</real>
-    </map>   
-    
+      <real>0.25</real>
+    </map>       
     <key>FSRegionCrossingAngleErrorLimit</key>
     <map>
       <key>Comment</key>
@@ -25117,8 +25115,7 @@ Change of this parameter will affect the layout of buttons in notification toast
       <string>F32</string>
       <key>Value</key>
       <real>20.0</real>
-    </map>   
-    
+    </map>       
     <key>FSRegionCrossingSmoothingTime</key>
     <map>
       <key>Comment</key>
@@ -25128,12 +25125,8 @@ Change of this parameter will affect the layout of buttons in notification toast
       <key>Type</key>
       <string>F32</string>
       <key>Value</key>
-      <real>5.0</real>
-    </map>   
-
-    
-    
-    
+      <real>10.0</real>
+    </map>       
     <key>FSStatisticsNoFocus</key>
     <map>
       <key>Comment</key>
