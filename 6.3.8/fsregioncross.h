@@ -33,9 +33,6 @@
 //
 #include <memory>
 #include <limits>
-#ifdef UNITTEST                                                     // for test harness only, outside Firestorm
-#include "fsregioncrosstestdummies.h"  // ***TEMP***
-#endif // UNITTEST
 
 class LLViewerObject;                                               // forward declaration
 
