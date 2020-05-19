@@ -103,6 +103,8 @@ Notes from Marissa Orlov on 2020-05-18:
     but it defaults to .local so you can just make a $PATH
     [15:59] Marissa Orlova (marissaorloff): I started building in 20.04 a month before release 
     because I knew it was going to be messed up with python2 being handed its hat and shown the door
+    [16.01] Marissa Orlova (marissaorloff): Other than that it's fine :)
+    [16:01] Marissa Orlova (marissaorloff): gcc 9.3 works great for FS
 
 
 
