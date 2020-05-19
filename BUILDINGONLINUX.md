@@ -105,6 +105,11 @@ Notes from Marissa Orlov on 2020-05-18:
     because I knew it was going to be messed up with python2 being handed its hat and shown the door
     [16.01] Marissa Orlova (marissaorloff): Other than that it's fine :)
     [16:01] Marissa Orlova (marissaorloff): gcc 9.3 works great for FS
+    [16:06] Marissa Orlova (marissaorloff): oh... when recompiling ogg_vorbis you need edit one line in build.sh
+    [16:07] Marissa Orlova (marissaorloff): if I remember right its line 91 and you needs to remove ll_release
+    [16:07] Marissa Orlova (marissaorloff): It was a long time ago and I need coffee
+    [16:08] Marissa Orlova (marissaorloff): and.... lol
+    [16:08] Marissa Orlova (marissaorloff): aclocal needs a symlink
 
 
 
