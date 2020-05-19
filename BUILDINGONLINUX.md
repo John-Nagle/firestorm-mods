@@ -90,4 +90,19 @@ Worked the first time. Even voice worked.
     
 This probably has something to do with running the internal browser in sandbox mode.
 
+## Building under Ubuntu 20.04
+
+Notes from Marissa Orlov on 2020-05-18:
+
+    [15:56] Marissa Orlova (marissaorloff): 20.04 is vastly different from that
+    [15:56] Marissa Orlova (marissaorloff): not vastly
+    [15:56] Marissa Orlova (marissaorloff): you have to specify python2 and make alternatives
+    [15:57] Marissa Orlova (marissaorloff): no python-pip anymore
+    [15:57] Marissa Orlova (marissaorloff): ogg_vorbis needs to be re-compiled or it won't link
+    [15:58] Marissa Orlova (marissaorloff): But, you can download pip from the main site.. 
+    but it defaults to .local so you can just make a $PATH
+    [15:59] Marissa Orlova (marissaorloff): I started building in 20.04 a month before release 
+    because I knew it was going to be messed up with python2 being handed its hat and shown the door
+
+
 
